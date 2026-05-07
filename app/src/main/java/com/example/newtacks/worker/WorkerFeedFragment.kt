@@ -115,31 +115,76 @@ class WorkerFeedFragment : Fragment() {
         val currentUser = FirebaseAuth.getInstance().currentUser ?: return
         val workerId = currentUser.uid
 
-        db.collection("users")
-            .document(workerId)
+        // --------------------------------------------------
+        // CHECK IF WORKER ALREADY HAS ACTIVE JOB
+        // --------------------------------------------------
+
+        db.collection("jobs")
+            .whereEqualTo("workerId", workerId)
+            .whereIn(
+                "status",
+                listOf(
+                    "IN_PROGRESS",
+                    "PENDING_VERIFICATION"
+                )
+            )
             .get()
-            .addOnSuccessListener { doc ->
+            .addOnSuccessListener { snapshots ->
 
-                val workerName = doc.getString("name") ?: "Worker"
+                // WORKER ALREADY HAS ACTIVE JOB
+                if (!snapshots.isEmpty) {
 
-                db.runTransaction { transaction ->
+                    android.widget.Toast.makeText(
+                        requireContext(),
+                        "Finish your current job first",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
 
-                    val ref = db.collection("jobs").document(job.jobId)
-                    val snapshot = transaction.get(ref)
-
-                    val status = snapshot.getString("status")
-
-                    if (status != "AVAILABLE") {
-                        throw Exception("Job already taken")
-                    }
-
-                    transaction.update(ref, mapOf(
-                        "status" to "IN_PROGRESS",
-                        "workerId" to workerId,
-                        "workerName" to workerName,
-                        "acceptedAt" to System.currentTimeMillis()
-                    ))
+                    return@addOnSuccessListener
                 }
+
+                // --------------------------------------------------
+                // FETCH WORKER NAME
+                // --------------------------------------------------
+
+                db.collection("users")
+                    .document(workerId)
+                    .get()
+                    .addOnSuccessListener { doc ->
+
+                        val workerName =
+                            doc.getString("name") ?: "Worker"
+
+                        // --------------------------------------------------
+                        // FIRESTORE TRANSACTION
+                        // --------------------------------------------------
+
+                        db.runTransaction { transaction ->
+
+                            val ref = db.collection("jobs")
+                                .document(job.jobId)
+
+                            val snapshot = transaction.get(ref)
+
+                            val status =
+                                snapshot.getString("status")
+
+                            // JOB ALREADY TAKEN
+                            if (status != "AVAILABLE") {
+                                throw Exception("Job already taken")
+                            }
+
+                            transaction.update(
+                                ref,
+                                mapOf(
+                                    "status" to "IN_PROGRESS",
+                                    "workerId" to workerId,
+                                    "workerName" to workerName,
+                                    "acceptedAt" to System.currentTimeMillis()
+                                )
+                            )
+                        }
+                    }
             }
     }
 
