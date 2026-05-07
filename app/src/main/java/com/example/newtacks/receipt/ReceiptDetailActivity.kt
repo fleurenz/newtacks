@@ -37,7 +37,13 @@ class ReceiptDetailActivity : AppCompatActivity() {
                 findViewById<TextView>(R.id.tvAmount).text = "₱${receipt.amount}"
                 findViewById<TextView>(R.id.tvService).text = receipt.serviceCategory
             }
+
+        findViewById<com.google.android.material.button.MaterialButton>(R.id.btnOkay).setOnClickListener {
+            finish()
+        }
     }
+
+
 
     companion object {
 
