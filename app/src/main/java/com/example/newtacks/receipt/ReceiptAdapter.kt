@@ -43,7 +43,7 @@ class ReceiptAdapter(
 
             title.text = receipt.jobTitle
             amount.text = "₱${receipt.amount}"
-            worker.text = "Worker: ${receipt.workerName}"
+            worker.text = receipt.workerName
 
             itemView.setOnClickListener {
                 onClick(receipt)
