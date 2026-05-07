@@ -13,6 +13,7 @@ import com.example.newtacks.models.Review
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
 
+
 class ClientRequestsFragment : Fragment() {
 
     private val firestore = FirebaseFirestore.getInstance()
@@ -89,22 +90,36 @@ class ClientRequestsFragment : Fragment() {
     // --------------------------------------------------
 
     private fun showActiveJob(job: Job) {
-
         currentJobId = job.jobId
-
         tvTitle.text = job.jobTitle
-
         tvDetails.text = """
-            Service: ${job.serviceCategory}
-            Worker: ${job.workerName ?: "Waiting for worker..."}
-            Price: ₱${job.offeredAmount}
-        """.trimIndent()
+        Service: ${job.serviceCategory}
+        Worker: ${job.workerName ?: "Waiting for worker..."}
+        Price: ₱${job.offeredAmount}
+    """.trimIndent()
 
-        progressText.text = when (job.status) {
-            "AVAILABLE" -> "Waiting for worker..."
-            "IN_PROGRESS" -> "Worker is working"
-            "PENDING_VERIFICATION" -> "Ready for confirmation"
-            else -> "Active"
+        // ===== BADGE TEXT + STYLE =====
+        when (job.status) {
+            "AVAILABLE" -> {
+                progressText.text = "Waiting for worker..."
+                progressText.setTextColor(android.graphics.Color.parseColor("#FFFFFF"))
+                progressText.setBackgroundResource(R.drawable.bg_badge_blue)
+            }
+            "IN_PROGRESS" -> {
+                progressText.text = "Worker is working"
+                progressText.setTextColor(android.graphics.Color.parseColor("#D97706"))
+                progressText.setBackgroundResource(R.drawable.bg_badge_yellow)
+            }
+            "PENDING_VERIFICATION" -> {
+                progressText.text = "Ready for confirmation"
+                progressText.setTextColor(android.graphics.Color.parseColor("#16A34A"))
+                progressText.setBackgroundResource(R.drawable.bg_badge_green)
+            }
+            else -> {
+                progressText.text = "Active"
+                progressText.setTextColor(android.graphics.Color.parseColor("#FFFFFF"))
+                progressText.setBackgroundResource(R.drawable.bg_badge_blue)
+            }
         }
 
         progressBar.visibility = View.VISIBLE
@@ -116,7 +131,6 @@ class ClientRequestsFragment : Fragment() {
         }
 
         val isPending = job.status == "PENDING_VERIFICATION"
-
         btnConfirm.visibility = if (isPending) View.VISIBLE else View.GONE
         btnReject.visibility = if (isPending) View.VISIBLE else View.GONE
     }
@@ -126,15 +140,12 @@ class ClientRequestsFragment : Fragment() {
     // --------------------------------------------------
 
     private fun showEmptyState() {
-
         currentJobId = null
-
         tvTitle.text = "No Active Job"
         tvDetails.text = ""
         progressText.text = ""
-
+        progressText.background = null  // clear badge when empty
         progressBar.visibility = View.GONE
-
         btnConfirm.visibility = View.GONE
         btnReject.visibility = View.GONE
     }
