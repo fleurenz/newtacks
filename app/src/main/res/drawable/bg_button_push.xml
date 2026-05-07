@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- PRESSED state — shifts down, darker color -->
     <item android:state_pressed="true">
         <shape android:shape="oval">
-            <solid android:color="#003D80" />
-            <stroke
-                android:width="3dp"
-                android:color="#002D60" />
+            <solid android:color="#003A7A" />
+            <size
+                android:width="160dp"
+                android:height="160dp" />
         </shape>
     </item>
 
-    <!-- DEFAULT state -->
     <item>
         <shape android:shape="oval">
             <solid android:color="#004A99" />
-            <stroke
-                android:width="3dp"
-                android:color="#003D80" />
+            <size
+                android:width="160dp"
+                android:height="160dp" />
         </shape>
     </item>
 

@@ -27,8 +27,8 @@ class ClientRequestsFragment : Fragment() {
     private lateinit var progressBar: ProgressBar
     private lateinit var layoutContent: LinearLayout
     private lateinit var layoutEmptyState: LinearLayout
-
     private lateinit var layoutProgressLabels: LinearLayout
+    private lateinit var layoutBottomButtons: LinearLayout
 
     private var currentJobId: String? = null
     private var lastCancelTime: Long = 0
@@ -49,6 +49,7 @@ class ClientRequestsFragment : Fragment() {
         layoutContent    = view.findViewById(R.id.layoutContent)
         layoutEmptyState = view.findViewById(R.id.layoutEmptyState)
         layoutProgressLabels = view.findViewById(R.id.layoutProgressLabels)
+        layoutBottomButtons = view.findViewById(R.id.layoutBottomButtons)
 
         listenForActiveJob()
         btnConfirm.setOnClickListener { confirmJob() }
@@ -82,12 +83,16 @@ class ClientRequestsFragment : Fragment() {
     // 🔥 UI STATE: ACTIVE JOB
     // --------------------------------------------------
     private fun showActiveJob(job: Job) {
-        // Show content, hide empty state
-        layoutContent.visibility    = View.VISIBLE
+        layoutContent.visibility = View.VISIBLE
         layoutEmptyState.visibility = View.GONE
-        progressText.visibility     = View.VISIBLE
-        progressBar.visibility      = View.VISIBLE
+        progressText.visibility = View.VISIBLE
+        progressBar.visibility = View.VISIBLE
         layoutProgressLabels.visibility = View.VISIBLE
+        layoutBottomButtons.visibility =
+            if (job.status == "PENDING_VERIFICATION")
+                View.VISIBLE
+            else
+                View.GONE
 
         currentJobId  = job.jobId
         tvTitle.text  = job.jobTitle
@@ -138,15 +143,14 @@ class ClientRequestsFragment : Fragment() {
     // --------------------------------------------------
     private fun showEmptyState() {
         currentJobId = null
-
-        layoutContent.visibility    = View.GONE
+        layoutContent.visibility = View.GONE
         layoutEmptyState.visibility = View.VISIBLE
-
+        layoutBottomButtons.visibility = View.GONE
         progressText.visibility = View.GONE
-        progressBar.visibility  = View.GONE
-        tvTitle.text            = ""
-        btnConfirm.visibility   = View.GONE
-        btnReject.visibility    = View.GONE
+        progressBar.visibility = View.GONE
+        tvTitle.text = ""
+        btnConfirm.visibility = View.GONE
+        btnReject.visibility = View.GONE
         layoutProgressLabels.visibility = View.GONE
     }
 

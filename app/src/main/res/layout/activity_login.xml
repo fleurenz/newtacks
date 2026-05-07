@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#004A99">
@@ -11,9 +11,8 @@
         android:id="@+id/topSection"
         android:layout_width="match_parent"
         android:layout_height="280dp"
-        android:orientation="vertical"
         android:gravity="center"
-        android:paddingTop="48dp">
+        android:orientation="vertical">
 
         <FrameLayout
             android:layout_width="140dp"
@@ -28,8 +27,8 @@
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:layout_gravity="center"
-                android:src="@drawable/tacks_logo"
-                android:scaleType="fitCenter" />
+                android:scaleType="fitCenter"
+                android:src="@drawable/tacks_logo" />
         </FrameLayout>
     </LinearLayout>
 
@@ -41,59 +40,59 @@
         android:layout_below="@id/topSection"
         android:background="@drawable/rounded_top_white"
         android:orientation="vertical"
-        android:paddingTop="36dp"
-        android:paddingBottom="24dp"
         android:paddingStart="28dp"
-        android:paddingEnd="28dp">
+        android:paddingTop="36dp"
+        android:paddingEnd="28dp"
+        android:paddingBottom="24dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
             android:text="Welcome Back"
-            android:textSize="22sp"
-            android:textStyle="bold"
             android:textColor="#004A99"
-            android:layout_marginBottom="4dp" />
+            android:textSize="22sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
             android:text="Log in to your account"
-            android:textSize="14sp"
             android:textColor="#888888"
-            android:layout_marginBottom="24dp" />
+            android:textSize="14sp" />
 
         <!-- Email Input -->
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Email"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_marginBottom="14dp">
+            android:layout_marginBottom="14dp"
+            android:hint="Email">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etEmail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textEmailAddress"
-                android:autofillHints="emailAddress" />
+                android:autofillHints="emailAddress"
+                android:inputType="textEmailAddress" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Password Input -->
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
             android:hint="Password"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            app:passwordToggleEnabled="true"
-            android:layout_marginBottom="8dp">
+            app:passwordToggleEnabled="true">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:autofillHints="password" />
+                android:autofillHints="password"
+                android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Forgot Password (plain text) -->
@@ -101,13 +100,13 @@
             android:id="@+id/forgotPassword"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Forgot Password?"
-            android:textColor="#004A99"
-            android:textSize="13sp"
             android:layout_gravity="end"
             android:layout_marginBottom="20dp"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true"
+            android:text="Forgot Password?"
+            android:textColor="#004A99"
+            android:textSize="13sp" />
 
         <!-- Login Button -->
         <FrameLayout
@@ -120,8 +119,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:text="Log In"
-                android:textSize="16sp"
                 android:textColor="#FFFFFF"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 app:backgroundTint="#004A99"
                 app:cornerRadius="10dp" />
@@ -142,21 +141,21 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="20dp"
+            android:clickable="true"
+            android:focusable="true"
             android:text="Log in with Google"
             android:textColor="#004A99"
-            android:textSize="14sp"
-            android:clickable="true"
-            android:focusable="true" />
+            android:textSize="14sp" />
 
         <!-- Sign up link -->
         <TextView
             android:id="@+id/goToSignup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:text="Don't have an account? Sign Up"
             android:textColor="#004A99"
-            android:textSize="13sp"
-            android:layout_gravity="center_horizontal" />
+            android:textSize="13sp" />
 
     </LinearLayout>
 
