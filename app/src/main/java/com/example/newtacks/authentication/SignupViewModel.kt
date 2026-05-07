@@ -1,0 +1,59 @@
+package com.example.newtacks.authentication
+
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+
+class SignupViewModel(
+    private val repo: AuthRepository
+) : ViewModel() {
+
+    val signupState = MutableLiveData<SignupState>()
+
+    fun register(
+        email: String,
+        password: String,
+        confirmPassword: String,
+        role: String,
+        name: String,
+        phone: String,
+        address: String,
+        companyName: String? = null,
+        hrName: String? = null,
+        categories: List<String>? = null,
+        experience: Int? = null
+    ) {
+
+        if (email.isEmpty() || password.isEmpty()) {
+            signupState.value = SignupState.Error("Fields cannot be empty")
+            return
+        }
+
+        if (password != confirmPassword) {
+            signupState.value = SignupState.Error("Passwords do not match")
+            return
+        }
+
+        signupState.value = SignupState.Loading
+
+        repo.register(
+            email = email,
+            password = password,
+            role = role,
+            name = name,
+            phone = phone,
+            address = address,
+            companyName = companyName,
+            hrName = hrName,
+            categories = categories,
+            experience = experience
+        ) { result ->
+            result.onSuccess {
+                signupState.value = SignupState.Success
+            }
+
+            result.onFailure {
+                signupState.value = SignupState.Error(it.message ?: "Signup failed")
+            }
+        }
+    }
+}
