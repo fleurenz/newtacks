@@ -7,20 +7,18 @@
     android:orientation="vertical"
     android:background="#F0F4F8">
 
-    <!-- ===== TOOLBAR ===== -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="#004A99"
         android:elevation="4dp"
-        app:title="Request a Fix"
+        app:title="@string/request_fix"
         app:titleTextColor="#FFFFFF"
         app:titleTextAppearance="@style/ToolbarTitleStyle"
         app:navigationIcon="@drawable/ic_back"
-        app:navigationContentDescription="Back" />
+        app:navigationContentDescription="@string/back" />
 
-    <!-- ===== SCROLLABLE CONTENT ===== -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -36,7 +34,7 @@
             android:paddingTop="20dp"
             android:paddingBottom="20dp">
 
-            <!-- ===== YOUR INFORMATION CARD ===== -->
+            <!-- YOUR INFORMATION -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -45,352 +43,149 @@
                 android:padding="16dp"
                 android:layout_marginBottom="16dp">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="14dp">
-
-                    <View
-                        android:layout_width="4dp"
-                        android:layout_height="18dp"
-                        android:background="#004A99"
-                        android:layout_marginEnd="8dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="YOUR INFORMATION"
-                        android:textColor="#004A99"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.1" />
-                </LinearLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Job Title"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    app:boxStrokeColor="#004A99"
-                    app:hintTextColor="#004A99"
-                    android:layout_marginBottom="12dp">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etJobTitle"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="#1E293B" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Client Name"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    app:boxStrokeColor="#004A99"
-                    app:hintTextColor="#004A99"
-                    android:layout_marginBottom="12dp">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etClientName"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="#1E293B" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Address"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    app:boxStrokeColor="#004A99"
-                    app:hintTextColor="#004A99">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etClientAddress"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="#1E293B" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-
-            <!-- ===== SERVICE DETAILS CARD ===== -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_card"
-                android:padding="16dp"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="14dp">
-
-                    <View
-                        android:layout_width="4dp"
-                        android:layout_height="18dp"
-                        android:background="#004A99"
-                        android:layout_marginEnd="8dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="SERVICE DETAILS"
-                        android:textColor="#004A99"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.1" />
-                </LinearLayout>
-
-                <!-- Service Type Spinner -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Service Type"
-                    android:textColor="#64748B"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="4dp" />
-
-                <Spinner
-                    android:id="@+id/spinnerServiceType"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:background="@drawable/bg_spinner_improved"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:layout_marginBottom="14dp" />
-
-                <!-- Date + Time row -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="14dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginEnd="8dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Date"
-                            android:textColor="#64748B"
-                            android:textSize="12sp"
-                            android:layout_marginBottom="4dp" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnSelectDate"
-                            android:layout_width="match_parent"
-                            android:layout_height="52dp"
-                            android:text="Select Date"
-                            android:textColor="#64748B"
-                            android:textSize="13sp"
-                            app:backgroundTint="#FFFFFF"
-                            app:strokeColor="#CBD5E1"
-                            app:strokeWidth="1dp"
-                            app:cornerRadius="8dp"
-                            app:icon="@drawable/ic_calendar"
-                            app:iconTint="#004A99"
-                            app:iconGravity="end" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Time"
-                            android:textColor="#64748B"
-                            android:textSize="12sp"
-                            android:layout_marginBottom="4dp" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnSelectTime"
-                            android:layout_width="match_parent"
-                            android:layout_height="52dp"
-                            android:text="Select Time"
-                            android:textColor="#64748B"
-                            android:textSize="13sp"
-                            app:backgroundTint="#FFFFFF"
-                            app:strokeColor="#CBD5E1"
-                            app:strokeWidth="1dp"
-                            app:cornerRadius="8dp"
-                            app:icon="@drawable/ic_time"
-                            app:iconTint="#004A99"
-                            app:iconGravity="end" />
-                    </LinearLayout>
-                </LinearLayout>
+                    android:text="@string/your_information"
+                    android:textColor="#004A99"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Estimated Duration (Hours)"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    app:boxStrokeColor="#004A99"
-                    app:hintTextColor="#004A99">
+                    android:hint="@string/job_title">
+
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etDuration"
+                        android:id="@+id/etJobTitle"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="numberDecimal"
-                        android:textColor="#1E293B" />
+                        android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/client_name">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etClientName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/address">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etClientAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
                 </com.google.android.material.textfield.TextInputLayout>
 
             </LinearLayout>
 
-            <!-- ===== PAYMENT CARD ===== -->
-            <LinearLayout
+            <!-- SERVICE DETAILS -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/service_details" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/service_type" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/date" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSelectDate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_card"
-                android:padding="16dp"
-                android:layout_marginBottom="16dp">
+                android:text="@string/select_date" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="14dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/time" />
 
-                    <View
-                        android:layout_width="4dp"
-                        android:layout_height="18dp"
-                        android:background="#004A99"
-                        android:layout_marginEnd="8dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="PAYMENT"
-                        android:textColor="#004A99"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.1" />
-                </LinearLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Offer Amount"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    app:boxStrokeColor="#004A99"
-                    app:hintTextColor="#004A99"
-                    app:prefixText="₱ ">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etOfferAmount"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="numberDecimal"
-                        android:textColor="#1E293B" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-
-            <!-- ===== DESCRIPTION CARD ===== -->
-            <LinearLayout
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSelectTime"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_card"
-                android:padding="16dp"
-                android:layout_marginBottom="8dp">
+                android:text="@string/select_time" />
 
-                <LinearLayout
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/estimated_duration">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etDuration"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="14dp">
+                    android:layout_height="wrap_content" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-                    <View
-                        android:layout_width="4dp"
-                        android:layout_height="18dp"
-                        android:background="#004A99"
-                        android:layout_marginEnd="8dp" />
+            <!-- PAYMENT -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/payment" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="DESCRIPTION"
-                        android:textColor="#004A99"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.1" />
-                </LinearLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/offer_amount">
 
-                <com.google.android.material.textfield.TextInputLayout
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etOfferAmount"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Describe the job in detail..."
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    app:boxStrokeColor="#004A99"
-                    app:hintTextColor="#004A99">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etDescription"
-                        android:layout_width="match_parent"
-                        android:layout_height="120dp"
-                        android:gravity="top|start"
-                        android:inputType="textMultiLine"
-                        android:textColor="#1E293B" />
-                </com.google.android.material.textfield.TextInputLayout>
+                    android:layout_height="wrap_content" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-            </LinearLayout>
+            <!-- DESCRIPTION -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/description" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/describe_job">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
         </LinearLayout>
     </ScrollView>
 
-    <!-- ===== BOTTOM BUTTON ROW ===== -->
+    <!-- BUTTONS -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="16dp"
-        android:background="#FFFFFF"
-        android:elevation="12dp">
+        android:orientation="horizontal">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCancel"
             android:layout_width="0dp"
-            android:layout_height="52dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Cancel"
-            android:textColor="#64748B"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:layout_marginEnd="10dp"
-            app:backgroundTint="#F1F5F9"
-            app:cornerRadius="12dp"
-            app:strokeColor="#CBD5E1"
-            app:strokeWidth="1dp" />
+            android:text="@string/cancel" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSubmit"
             android:layout_width="0dp"
-            android:layout_height="52dp"
+            android:layout_height="wrap_content"
             android:layout_weight="2"
-            android:text="Submit Request"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            app:backgroundTint="#004A99"
-            app:cornerRadius="12dp" />
+            android:text="@string/submit_request" />
 
     </LinearLayout>
 
