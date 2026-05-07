@@ -4,10 +4,12 @@ import android.os.Bundle
 import android.view.*
 import android.view.animation.AlphaAnimation
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.example.newtacks.R
 import com.example.newtacks.models.Job
 import com.example.newtacks.models.Receipt
+import com.example.newtacks.models.Review
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
 
@@ -99,7 +101,6 @@ class ClientRequestsFragment : Fragment() {
         """.trimIndent()
 
         progressText.text = when (job.status) {
-
             "AVAILABLE" -> "Waiting for worker..."
             "IN_PROGRESS" -> "Worker is working"
             "PENDING_VERIFICATION" -> "Ready for confirmation"
@@ -121,7 +122,7 @@ class ClientRequestsFragment : Fragment() {
     }
 
     // --------------------------------------------------
-    // 🔥 UI STATE: EMPTY
+    // 🔥 EMPTY STATE
     // --------------------------------------------------
 
     private fun showEmptyState() {
@@ -139,7 +140,7 @@ class ClientRequestsFragment : Fragment() {
     }
 
     // --------------------------------------------------
-    // 🔥 FEATURE 1: ANIMATION
+    // 🔥 ANIMATION
     // --------------------------------------------------
 
     private fun animateUpdate() {
@@ -150,7 +151,7 @@ class ClientRequestsFragment : Fragment() {
     }
 
     // --------------------------------------------------
-    // 🔥 CONFIRM JOB (CLIENT APPROVAL)
+    // 🔥 CONFIRM JOB
     // --------------------------------------------------
 
     private fun confirmJob() {
@@ -167,18 +168,14 @@ class ClientRequestsFragment : Fragment() {
             )
             .addOnSuccessListener {
 
-                Toast.makeText(
-                    requireContext(),
-                    "Job Completed",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Job Completed", Toast.LENGTH_SHORT).show()
 
                 fetchJobAndGenerateReceipt(jobId)
             }
     }
 
     // --------------------------------------------------
-    // 🔥 FETCH FULL JOB BEFORE RECEIPT
+    // 🔥 FETCH JOB
     // --------------------------------------------------
 
     private fun fetchJobAndGenerateReceipt(jobId: String) {
@@ -197,7 +194,7 @@ class ClientRequestsFragment : Fragment() {
     }
 
     // --------------------------------------------------
-    // 🔥 RECEIPT GENERATION (SEPARATE COLLECTION)
+    // 🔥 RECEIPT
     // --------------------------------------------------
 
     private fun generateReceipt(job: Job) {
@@ -221,12 +218,14 @@ class ClientRequestsFragment : Fragment() {
             .document(receiptId)
             .set(receipt)
             .addOnSuccessListener {
+
                 sendVerificationNotification(job.clientId)
+                showReviewDialog(job)
             }
     }
 
     // --------------------------------------------------
-    // 🔥 FEATURE 4: NOTIFICATION TRIGGER (PLACEHOLDER)
+    // 🔥 NOTIFICATION
     // --------------------------------------------------
 
     private fun sendVerificationNotification(clientId: String) {
@@ -242,7 +241,7 @@ class ClientRequestsFragment : Fragment() {
     }
 
     // --------------------------------------------------
-    // 🔥 COOLDOWN CANCEL (ANTI-SPAM)
+    // 🔥 COOLDOWN CANCEL
     // --------------------------------------------------
 
     private fun rejectJob() {
@@ -250,11 +249,7 @@ class ClientRequestsFragment : Fragment() {
         val now = System.currentTimeMillis()
 
         if (now - lastCancelTime < 10_000) {
-            Toast.makeText(
-                requireContext(),
-                "Please wait before cancelling again",
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(requireContext(), "Please wait before cancelling again", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -267,12 +262,81 @@ class ClientRequestsFragment : Fragment() {
             .update("status", "IN_PROGRESS")
             .addOnSuccessListener {
 
-                Toast.makeText(
-                    requireContext(),
-                    "Returned to worker",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Returned to worker", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    // --------------------------------------------------
+    // 🔥 REVIEW DIALOG
+    // --------------------------------------------------
+
+    private fun showReviewDialog(job: Job) {
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_review, null)
+
+        val ratingBar = dialogView.findViewById<RatingBar>(R.id.ratingBar)
+        val etComment = dialogView.findViewById<EditText>(R.id.etComment)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Rate Worker")
+            .setView(dialogView)
+            .setPositiveButton("Submit") { _, _ ->
+
+                val review = Review(
+                    reviewId = firestore.collection("reviews").document().id,
+                    jobId = job.jobId ?: "",
+                    clientId = job.clientId,
+                    workerId = job.workerId ?: "",
+                    rating = ratingBar.rating,
+                    comment = etComment.text.toString()
+                )
+
+                saveReview(review)
+            }
+            .setNegativeButton("Skip", null)
+            .show()
+    }
+
+    // --------------------------------------------------
+    // 🔥 SAVE REVIEW
+    // --------------------------------------------------
+
+    private fun saveReview(review: Review) {
+
+        firestore.collection("reviews")
+            .document(review.reviewId)
+            .set(review)
+            .addOnSuccessListener {
+                updateWorkerRating(review)
+            }
+    }
+
+    // --------------------------------------------------
+    // 🔥 UPDATE WORKER RATING
+    // --------------------------------------------------
+
+    private fun updateWorkerRating(review: Review) {
+
+        val workerRef = firestore.collection("users").document(review.workerId)
+
+        firestore.runTransaction { transaction ->
+
+            val snapshot = transaction.get(workerRef)
+
+            val currentAvg = snapshot.getDouble("ratingAverage") ?: 0.0
+            val count = snapshot.getLong("ratingCount") ?: 0
+
+            val newCount = count + 1
+            val newAvg = ((currentAvg * count) + review.rating) / newCount
+
+            transaction.update(
+                workerRef,
+                mapOf(
+                    "ratingAverage" to newAvg,
+                    "ratingCount" to newCount
+                )
+            )
+        }
     }
 
     override fun onDestroyView() {

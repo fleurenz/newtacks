@@ -14,5 +14,7 @@ data class User(
 
     // 🔧 WORKER ONLY
     val serviceCategories: List<String>? = null,
-    val serviceExperience: Int? = null
+    val serviceExperience: Int? = null,
+    val rating: Double = 0.0,
+    val totalRatings: Int = 0
 )
