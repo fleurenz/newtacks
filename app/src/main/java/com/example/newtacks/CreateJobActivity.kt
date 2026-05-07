@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -60,6 +61,8 @@ class CreateJobActivity : AppCompatActivity() {
         btnSubmit.setOnClickListener { submitJob() }
     }
 
+
+
     // ---------------- INIT ----------------
 
     private fun initializeViews() {
@@ -84,7 +87,20 @@ class CreateJobActivity : AppCompatActivity() {
         etJobTitle.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) isUserEditingTitle = true
         }
+
+        btnSubmit.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    v.animate().translationY(6f).setDuration(80).start()
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    v.animate().translationY(0f).setDuration(80).start()
+                }
+            }
+            false
+        }
     }
+
 
     // ---------------- USER DATA ----------------
 
