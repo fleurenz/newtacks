@@ -11,6 +11,7 @@ import com.example.newtacks.models.Job
 import com.example.newtacks.models.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.util.Locale
 import java.util.*
 
 class CreateJobActivity : AppCompatActivity() {
@@ -44,19 +45,19 @@ class CreateJobActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
 
+        // ===== TOOLBAR =====
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        toolbar.setNavigationOnClickListener { finish() }
+
         initializeViews()
         loadClientInformation()
         setupServiceSpinner()
         setupDatePicker()
         setupTimePicker()
 
-        btnCancel.setOnClickListener {
-            finish()
-        }
-
-        btnSubmit.setOnClickListener {
-            submitJob()
-        }
+        btnCancel.setOnClickListener { finish() }
+        btnSubmit.setOnClickListener { submitJob() }
     }
 
     // ---------------- INIT ----------------
@@ -186,7 +187,7 @@ class CreateJobActivity : AppCompatActivity() {
                 this,
                 { _, hour, minute ->
 
-                    selectedTime = String.format("%02d:%02d", hour, minute)
+                    selectedTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
                     btnSelectTime.text = selectedTime
 
                 },
