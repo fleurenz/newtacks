@@ -2,6 +2,8 @@ package com.example.newtacks.worker
 
 import android.os.Bundle
 import android.view.*
+import android.widget.Button
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -32,7 +34,7 @@ class WorkerFeedFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         adapter = WorkerJobAdapter(jobList) { job ->
-            acceptJob(job)
+            showJobPreview(job)
         }
 
         recyclerView.adapter = adapter
@@ -41,6 +43,10 @@ class WorkerFeedFragment : Fragment() {
 
         return view
     }
+
+    // --------------------------------------------------
+    // LIVE JOB FEED
+    // --------------------------------------------------
 
     private fun listenForJobs() {
 
@@ -61,18 +67,54 @@ class WorkerFeedFragment : Fragment() {
             }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        listener?.remove()
+    // --------------------------------------------------
+    // JOB PREVIEW POPUP
+    // --------------------------------------------------
+
+    private fun showJobPreview(job: Job) {
+
+        val view = layoutInflater.inflate(R.layout.dialog_job_preview, null)
+
+        val tvTitle = view.findViewById<TextView>(R.id.tvTitle)
+        val tvDetails = view.findViewById<TextView>(R.id.tvDetails)
+        val btnAccept = view.findViewById<Button>(R.id.btnAccept)
+        val btnClose = view.findViewById<Button>(R.id.btnClose)
+
+        tvTitle.text = job.jobTitle
+
+        tvDetails.text = """
+            Category: ${job.serviceCategory}
+            Client: ${job.clientName}
+            Address: ${job.clientAddress}
+            Price: ₱${job.offeredAmount}
+            Description: ${job.description}
+        """.trimIndent()
+
+        val dialog = android.app.AlertDialog.Builder(requireContext())
+            .setView(view)
+            .create()
+
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnAccept.setOnClickListener {
+            dialog.dismiss()
+            acceptJob(job)
+        }
+
+        dialog.show()
     }
+
+    // --------------------------------------------------
+    // ACCEPT JOB (FIRESTORE TRANSACTION)
+    // --------------------------------------------------
 
     private fun acceptJob(job: Job) {
 
         val currentUser = FirebaseAuth.getInstance().currentUser ?: return
-
         val workerId = currentUser.uid
 
-        // FETCH REAL USER NAME FROM FIRESTORE
         db.collection("users")
             .document(workerId)
             .get()
@@ -99,5 +141,14 @@ class WorkerFeedFragment : Fragment() {
                     ))
                 }
             }
+    }
+
+    // --------------------------------------------------
+    // CLEANUP
+    // --------------------------------------------------
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        listener?.remove()
     }
 }

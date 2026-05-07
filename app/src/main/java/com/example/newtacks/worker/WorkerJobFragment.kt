@@ -2,23 +2,24 @@ package com.example.newtacks.worker
 
 import android.os.Bundle
 import android.view.*
-import android.widget.Button
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.fragment.app.Fragment
 import com.example.newtacks.R
 import com.example.newtacks.models.Job
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.*
 
 class WorkerJobFragment : Fragment() {
 
-    private val db = FirebaseFirestore.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+
+    private var listener: ListenerRegistration? = null
 
     private lateinit var tvTitle: TextView
     private lateinit var tvDetails: TextView
-    private lateinit var btnRequestDone: Button
+    private lateinit var tvStatus: TextView
+    private lateinit var btnDone: Button
 
     private var currentJobId: String? = null
 
@@ -32,61 +33,109 @@ class WorkerJobFragment : Fragment() {
 
         tvTitle = view.findViewById(R.id.tvJobTitle)
         tvDetails = view.findViewById(R.id.tvJobDetails)
-        btnRequestDone = view.findViewById(R.id.btnRequestDone)
+        tvStatus = view.findViewById(R.id.tvJobStatus)
+        btnDone = view.findViewById(R.id.btnRequestDone)
 
-        loadActiveJob()
+        listenForActiveJob()
 
-        btnRequestDone.setOnClickListener {
-            requestJobDone()
+        btnDone.setOnClickListener {
+            requestDone()
         }
 
         return view
     }
 
-    private fun loadActiveJob() {
+    // --------------------------------------------------
+    // 🔥 ACTIVE JOB LISTENER (SINGLE LIFECYCLE)
+    // --------------------------------------------------
+
+    private fun listenForActiveJob() {
 
         val workerId = auth.currentUser?.uid ?: return
 
-        db.collection("jobs")
+        listener = firestore.collection("jobs")
             .whereEqualTo("workerId", workerId)
-            .whereEqualTo("status", "IN_PROGRESS")
+            .whereIn("status", listOf("IN_PROGRESS", "PENDING_VERIFICATION"))
+            .limit(1)
             .addSnapshotListener { snapshots, _ ->
 
-                if (snapshots == null || snapshots.isEmpty) {
-                    tvTitle.text = "No Active Job"
-                    tvDetails.text = ""
-                    btnRequestDone.visibility = View.GONE
-                    return@addSnapshotListener
-                }
+                val job = snapshots?.documents?.firstOrNull()
+                    ?.toObject(Job::class.java)
 
-                val doc = snapshots.documents[0]
-                val job = doc.toObject(Job::class.java)
-
-                if (job != null) {
-
-                    currentJobId = job.jobId
-
-                    tvTitle.text = job.jobTitle
-                    tvDetails.text =
-                        "${job.serviceCategory}\n${job.clientAddress}\n₱${job.offeredAmount}"
-
-                    btnRequestDone.visibility = View.VISIBLE
+                if (job == null) {
+                    showEmptyState()
+                } else {
+                    showActiveJob(job)
                 }
             }
     }
 
-    private fun requestJobDone() {
+    // --------------------------------------------------
+    // UI STATE
+    // --------------------------------------------------
+
+    private fun showActiveJob(job: Job) {
+
+        currentJobId = job.jobId
+
+        tvTitle.text = job.jobTitle
+
+        tvDetails.text = """
+            Client: ${job.clientName}
+            Service: ${job.serviceCategory}
+            ₱${job.offeredAmount}
+        """.trimIndent()
+
+        tvStatus.text = when (job.status) {
+
+            "IN_PROGRESS" -> "Working on job..."
+            "PENDING_VERIFICATION" -> "Waiting for client confirmation"
+            else -> "Active"
+        }
+
+        btnDone.visibility =
+            if (job.status == "IN_PROGRESS") View.VISIBLE else View.GONE
+    }
+
+    private fun showEmptyState() {
+
+        currentJobId = null
+
+        tvTitle.text = "No Active Job"
+        tvDetails.text = ""
+        tvStatus.text = ""
+
+        btnDone.visibility = View.GONE
+    }
+
+    // --------------------------------------------------
+    // ACTION: REQUEST DONE
+    // --------------------------------------------------
+
+    private fun requestDone() {
 
         val jobId = currentJobId ?: return
 
-        db.collection("jobs")
+        firestore.collection("jobs")
             .document(jobId)
-            .update("status", "PENDING_VERIFICATION")
+            .update(
+                mapOf(
+                    "status" to "PENDING_VERIFICATION",
+                    "completedAt" to System.currentTimeMillis()
+                )
+            )
             .addOnSuccessListener {
 
-                Toast.makeText(requireContext(),
-                    "Waiting for client verification",
-                    Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Marked as done. Waiting for client verification.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        listener?.remove()
     }
 }
