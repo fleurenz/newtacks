@@ -2,16 +2,14 @@ package com.example.newtacks.client
 
 import android.os.Bundle
 import android.view.*
-import android.widget.Button
-import android.widget.TextView
-import android.widget.Toast
+import android.view.animation.AlphaAnimation
+import android.widget.*
 import androidx.fragment.app.Fragment
 import com.example.newtacks.R
 import com.example.newtacks.models.Job
 import com.example.newtacks.models.Receipt
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.*
 
 class ClientRequestsFragment : Fragment() {
 
@@ -24,8 +22,11 @@ class ClientRequestsFragment : Fragment() {
     private lateinit var tvDetails: TextView
     private lateinit var btnConfirm: Button
     private lateinit var btnReject: Button
+    private lateinit var progressText: TextView
+    private lateinit var progressBar: ProgressBar
 
     private var currentJobId: String? = null
+    private var lastCancelTime: Long = 0
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,76 +40,118 @@ class ClientRequestsFragment : Fragment() {
         tvDetails = view.findViewById(R.id.tvRequestDetails)
         btnConfirm = view.findViewById(R.id.btnConfirm)
         btnReject = view.findViewById(R.id.btnReject)
+        progressText = view.findViewById(R.id.tvProgress)
+        progressBar = view.findViewById(R.id.progressBar)
 
-        listenForPendingJobs()
+        listenForActiveJob()
 
-        btnConfirm.setOnClickListener {
-            confirmJob()
-        }
-
-        btnReject.setOnClickListener {
-            rejectJob()
-        }
+        btnConfirm.setOnClickListener { confirmJob() }
+        btnReject.setOnClickListener { rejectJob() }
 
         return view
     }
 
-    // ---------------- REALTIME LISTENER ----------------
+    // --------------------------------------------------
+    // 🔥 REALTIME ACTIVE JOB LISTENER
+    // --------------------------------------------------
 
-    private fun listenForPendingJobs() {
+    private fun listenForActiveJob() {
 
         val clientId = auth.currentUser?.uid ?: return
 
         listener = firestore.collection("jobs")
             .whereEqualTo("clientId", clientId)
-            .whereEqualTo("status", "PENDING_VERIFICATION")
-            .addSnapshotListener { snapshots, _ ->
+            .whereIn(
+                "status",
+                listOf("AVAILABLE", "IN_PROGRESS", "PENDING_VERIFICATION")
+            )
+            .limit(1)
+            .addSnapshotListener { snapshots, error ->
 
-                if (snapshots == null || snapshots.isEmpty) {
+                if (error != null) return@addSnapshotListener
+
+                val job = snapshots?.documents?.firstOrNull()
+                    ?.toObject(Job::class.java)
+
+                if (job == null) {
                     showEmptyState()
-                    return@addSnapshotListener
-                }
-
-                val doc = snapshots.documents[0]
-                val job = doc.toObject(Job::class.java)
-
-                if (job != null) {
-                    showPendingJob(job)
+                } else {
+                    showActiveJob(job)
+                    animateUpdate()
                 }
             }
     }
 
-    // ---------------- UI STATES ----------------
+    // --------------------------------------------------
+    // 🔥 UI STATE: ACTIVE JOB
+    // --------------------------------------------------
 
-    private fun showPendingJob(job: Job) {
+    private fun showActiveJob(job: Job) {
 
         currentJobId = job.jobId
 
-        tvTitle.text = "Verify Completed Job"
-        tvDetails.text =
-            """
-            ${job.jobTitle}
-            ${job.serviceCategory}
-            Worker: ${job.workerName ?: "N/A"}
-            ₱${job.offeredAmount}
-            """.trimIndent()
+        tvTitle.text = job.jobTitle
 
-        btnConfirm.visibility = View.VISIBLE
-        btnReject.visibility = View.VISIBLE
+        tvDetails.text = """
+            Service: ${job.serviceCategory}
+            Worker: ${job.workerName ?: "Waiting for worker..."}
+            Price: ₱${job.offeredAmount}
+        """.trimIndent()
+
+        progressText.text = when (job.status) {
+
+            "AVAILABLE" -> "Waiting for worker..."
+            "IN_PROGRESS" -> "Worker is working"
+            "PENDING_VERIFICATION" -> "Ready for confirmation"
+            else -> "Active"
+        }
+
+        progressBar.visibility = View.VISIBLE
+        progressBar.progress = when (job.status) {
+            "AVAILABLE" -> 25
+            "IN_PROGRESS" -> 60
+            "PENDING_VERIFICATION" -> 100
+            else -> 0
+        }
+
+        val isPending = job.status == "PENDING_VERIFICATION"
+
+        btnConfirm.visibility = if (isPending) View.VISIBLE else View.GONE
+        btnReject.visibility = if (isPending) View.VISIBLE else View.GONE
     }
+
+    // --------------------------------------------------
+    // 🔥 UI STATE: EMPTY
+    // --------------------------------------------------
 
     private fun showEmptyState() {
 
         currentJobId = null
 
-        tvTitle.text = "No Pending Verification"
+        tvTitle.text = "No Active Job"
         tvDetails.text = ""
+        progressText.text = ""
+
+        progressBar.visibility = View.GONE
 
         btnConfirm.visibility = View.GONE
         btnReject.visibility = View.GONE
     }
 
-    // ---------------- ACTIONS ----------------
+    // --------------------------------------------------
+    // 🔥 FEATURE 1: ANIMATION
+    // --------------------------------------------------
+
+    private fun animateUpdate() {
+
+        val anim = AlphaAnimation(0.4f, 1.0f)
+        anim.duration = 300
+        view?.startAnimation(anim)
+    }
+
+    // --------------------------------------------------
+    // 🔥 CONFIRM JOB (CLIENT APPROVAL)
+    // --------------------------------------------------
 
     private fun confirmJob() {
 
@@ -116,7 +159,12 @@ class ClientRequestsFragment : Fragment() {
 
         firestore.collection("jobs")
             .document(jobId)
-            .update("status", "COMPLETED")
+            .update(
+                mapOf(
+                    "status" to "COMPLETED",
+                    "completedAt" to System.currentTimeMillis()
+                )
+            )
             .addOnSuccessListener {
 
                 Toast.makeText(
@@ -125,22 +173,92 @@ class ClientRequestsFragment : Fragment() {
                     Toast.LENGTH_SHORT
                 ).show()
 
-                // FETCH FULL JOB FIRST
-                firestore.collection("jobs")
-                    .document(jobId)
-                    .get()
-                    .addOnSuccessListener { doc ->
-
-                        val job = doc.toObject(Job::class.java)
-
-                        if (job != null) {
-                            generateReceipt(job)
-                        }
-                    }
+                fetchJobAndGenerateReceipt(jobId)
             }
     }
 
+    // --------------------------------------------------
+    // 🔥 FETCH FULL JOB BEFORE RECEIPT
+    // --------------------------------------------------
+
+    private fun fetchJobAndGenerateReceipt(jobId: String) {
+
+        firestore.collection("jobs")
+            .document(jobId)
+            .get()
+            .addOnSuccessListener { doc ->
+
+                val job = doc.toObject(Job::class.java)
+
+                if (job != null) {
+                    generateReceipt(job)
+                }
+            }
+    }
+
+    // --------------------------------------------------
+    // 🔥 RECEIPT GENERATION (SEPARATE COLLECTION)
+    // --------------------------------------------------
+
+    private fun generateReceipt(job: Job) {
+
+        val workerId = job.workerId ?: return
+        val receiptId = firestore.collection("receipts").document().id
+
+        val receipt = Receipt(
+            receiptId = receiptId,
+            jobId = job.jobId ?: "",
+            clientId = job.clientId,
+            workerId = workerId,
+            clientName = job.clientName,
+            workerName = job.workerName ?: "",
+            jobTitle = job.jobTitle,
+            serviceCategory = job.serviceCategory,
+            amount = job.offeredAmount
+        )
+
+        firestore.collection("receipts")
+            .document(receiptId)
+            .set(receipt)
+            .addOnSuccessListener {
+                sendVerificationNotification(job.clientId)
+            }
+    }
+
+    // --------------------------------------------------
+    // 🔥 FEATURE 4: NOTIFICATION TRIGGER (PLACEHOLDER)
+    // --------------------------------------------------
+
+    private fun sendVerificationNotification(clientId: String) {
+
+        firestore.collection("notifications")
+            .add(
+                mapOf(
+                    "to" to clientId,
+                    "title" to "Job Ready for Verification",
+                    "message" to "Your worker has completed the job."
+                )
+            )
+    }
+
+    // --------------------------------------------------
+    // 🔥 COOLDOWN CANCEL (ANTI-SPAM)
+    // --------------------------------------------------
+
     private fun rejectJob() {
+
+        val now = System.currentTimeMillis()
+
+        if (now - lastCancelTime < 10_000) {
+            Toast.makeText(
+                requireContext(),
+                "Please wait before cancelling again",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        lastCancelTime = now
 
         val jobId = currentJobId ?: return
 
@@ -151,40 +269,10 @@ class ClientRequestsFragment : Fragment() {
 
                 Toast.makeText(
                     requireContext(),
-                    "Returned to Worker",
+                    "Returned to worker",
                     Toast.LENGTH_SHORT
                 ).show()
             }
-    }
-
-    // ---------------- RECEIPT GENERATION ----------------
-
-    private fun generateReceipt(job: Job) {
-
-        val workerId = job.workerId ?: return
-
-        val receiptId = firestore.collection("receipts").document().id
-
-        val receipt = Receipt(
-
-            receiptId = receiptId,
-            jobId = job.jobId,
-
-            clientId = job.clientId,
-            workerId = workerId,
-
-            clientName = job.clientName,
-            workerName = job.workerName ?: "",
-
-            jobTitle = job.jobTitle,
-            serviceCategory = job.serviceCategory,
-
-            amount = job.offeredAmount
-        )
-
-        firestore.collection("receipts")
-            .document(receiptId)
-            .set(receipt)
     }
 
     override fun onDestroyView() {

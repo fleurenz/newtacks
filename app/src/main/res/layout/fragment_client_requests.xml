@@ -1,33 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="20dp"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#FAFAFA">
 
+    <!-- JOB TITLE -->
     <TextView
         android:id="@+id/tvRequestTitle"
-        android:textSize="20sp"
+        android:textSize="22sp"
         android:textStyle="bold"
+        android:textColor="#111111"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content" />
 
+    <!-- STATUS -->
     <TextView
-        android:id="@+id/tvRequestDetails"
-        android:layout_marginTop="10dp"
+        android:id="@+id/tvProgress"
+        android:text="Waiting..."
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#4CAF50"
+        android:layout_marginTop="6dp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content" />
 
+    <!-- 🔥 NEW: PROGRESS BAR -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:layout_marginTop="12dp"
+        android:max="100"
+        android:progress="0"
+        android:indeterminate="false" />
+
+    <!-- DETAILS CARD -->
+    <LinearLayout
+        android:layout_marginTop="16dp"
+        android:padding="16dp"
+        android:orientation="vertical"
+        android:background="#FFFFFF"
+        android:elevation="3dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tvRequestDetails"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <!-- SPACER -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <!-- ACTION BUTTONS -->
     <Button
         android:id="@+id/btnConfirm"
         android:text="Confirm Completion"
-        android:layout_marginTop="20dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_marginBottom="10dp"/>
 
     <Button
         android:id="@+id/btnReject"
-        android:text="Reject"
-        android:layout_marginTop="10dp"
+        android:text="Reject / Return"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
+
 </LinearLayout>

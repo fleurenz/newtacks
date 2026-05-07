@@ -1,6 +1,7 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="20dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -12,15 +13,28 @@
         android:layout_height="wrap_content"/>
 
     <TextView
-        android:id="@+id/tvJobDetails"
-        android:layout_marginTop="10dp"
+        android:id="@+id/tvJobStatus"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#4CAF50"
+        android:layout_marginTop="6dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
+    <TextView
+        android:id="@+id/tvJobDetails"
+        android:layout_marginTop="12dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
     <Button
         android:id="@+id/btnRequestDone"
-        android:text="Request Job Done"
-        android:layout_marginTop="20dp"
+        android:text="Request Done"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 </LinearLayout>
