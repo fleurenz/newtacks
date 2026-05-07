@@ -51,8 +51,8 @@
                     android:layout_width="13dp"
                     android:layout_height="13dp"
                     android:src="@drawable/ic_inbox"
-                    android:tint="#AACDE8"
-                    android:contentDescription="@null" />
+                    android:contentDescription="@null"
+                    app:tint="#AACDE8" />
 
                 <TextView
                     android:id="@+id/tvEmail"
@@ -76,8 +76,8 @@
                     android:layout_width="13dp"
                     android:layout_height="13dp"
                     android:src="@drawable/ic_location"
-                    android:tint="#AACDE8"
-                    android:contentDescription="@null" />
+                    android:contentDescription="@null"
+                    app:tint="#AACDE8" />
 
                 <TextView
                     android:id="@+id/tvAddress"
@@ -129,8 +129,8 @@
                         android:layout_width="18dp"
                         android:layout_height="18dp"
                         android:src="@drawable/ic_list_check"
-                        android:tint="#004A99"
-                        android:contentDescription="@null" />
+                        android:contentDescription="@null"
+                        app:tint="#004A99" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -171,8 +171,8 @@
                         android:layout_width="18dp"
                         android:layout_height="18dp"
                         android:src="@drawable/ic_check_circle"
-                        android:tint="#16A34A"
-                        android:contentDescription="@null" />
+                        android:contentDescription="@null"
+                        app:tint="#16A34A" />
 
                     <TextView
                         android:layout_width="0dp"
