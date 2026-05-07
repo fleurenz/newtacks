@@ -103,6 +103,8 @@ class WorkerFeedFragment : Fragment() {
             acceptJob(job)
         }
 
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
         dialog.show()
     }
 
