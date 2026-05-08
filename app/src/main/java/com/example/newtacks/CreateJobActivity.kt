@@ -13,6 +13,10 @@ import com.example.newtacks.models.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Locale
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import android.widget.LinearLayout
 import java.util.*
 
 class CreateJobActivity : AppCompatActivity() {
@@ -43,11 +47,35 @@ class CreateJobActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_job)
 
+        // ===== INSETS =====
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
+        val bottomButtons = findViewById<LinearLayout>(R.id.bottomButtons)
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { _, insets ->
+
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            toolbar.setPadding(
+                toolbar.paddingLeft,
+                systemBars.top,
+                toolbar.paddingRight,
+                toolbar.paddingBottom
+            )
+
+            bottomButtons.setPadding(
+                bottomButtons.paddingLeft,
+                bottomButtons.paddingTop,
+                bottomButtons.paddingRight,
+                systemBars.bottom + resources.getDimensionPixelSize(R.dimen.spacing_24)
+            )
+
+            insets
+        }
+
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
 
         // ===== TOOLBAR =====
-        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { finish() }
 
@@ -60,7 +88,6 @@ class CreateJobActivity : AppCompatActivity() {
         btnCancel.setOnClickListener { finish() }
         btnSubmit.setOnClickListener { submitJob() }
     }
-
 
 
     // ---------------- INIT ----------------
@@ -354,29 +381,6 @@ class CreateJobActivity : AppCompatActivity() {
                             Toast.LENGTH_SHORT
                         ).show()
                     }
-            }
-
-            .addOnSuccessListener {
-
-                Toast.makeText(this, "Job Submitted Successfully", Toast.LENGTH_SHORT).show()
-
-                val intent = Intent(this, ClientDashboardActivity::class.java)
-
-                intent.putExtra(
-                    ClientDashboardActivity.OPEN_FRAGMENT,
-                    "REQUESTS"
-                )
-
-                intent.flags =
-                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-
-                startActivity(intent)
-            }
-            .addOnFailureListener {
-
-                btnSubmit.isEnabled = true
-
-                Toast.makeText(this, "Failed to submit job", Toast.LENGTH_SHORT).show()
             }
     }
 }
