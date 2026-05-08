@@ -8,10 +8,13 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
+import coil.load
+import coil.transform.CircleCropTransformation
 import com.example.newtacks.R
 import com.example.newtacks.models.Job
 import com.example.newtacks.models.Receipt
 import com.example.newtacks.models.Review
+import com.example.newtacks.models.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
 import java.util.Locale
@@ -20,6 +23,7 @@ class ClientRequestsFragment : Fragment() {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+
     private var listener: ListenerRegistration? = null
 
     private lateinit var tvTitle: TextView
@@ -34,11 +38,13 @@ class ClientRequestsFragment : Fragment() {
     private lateinit var layoutProgressLabels: LinearLayout
     private lateinit var layoutBottomButtons: LinearLayout
     private lateinit var layoutHeader: LinearLayout
+    private lateinit var cardJobDetails: View
     private lateinit var cardWorkerInfo: View
     private lateinit var tvWorkerDetailName: TextView
     private lateinit var tvWorkerDetailPhone: TextView
     private lateinit var tvWorkerDetailRating: TextView
 
+    private var currentJob: Job? = null
     private var currentJobId: String? = null
     private var lastCancelTime: Long = 0
 
@@ -62,6 +68,7 @@ class ClientRequestsFragment : Fragment() {
         layoutBottomButtons  = view.findViewById(R.id.layoutBottomButtons)
         layoutHeader         = view.findViewById(R.id.layoutHeader)
 
+        cardJobDetails       = view.findViewById(R.id.cardJobDetails)
         cardWorkerInfo       = view.findViewById(R.id.cardWorkerInfo)
         tvWorkerDetailName   = view.findViewById(R.id.tvWorkerDetailName)
         tvWorkerDetailPhone  = view.findViewById(R.id.tvWorkerDetailPhone)
@@ -88,6 +95,14 @@ class ClientRequestsFragment : Fragment() {
         btnConfirm.setOnClickListener { confirmJob() }
         btnCancelJob.setOnClickListener { showCancelConfirmationDialog() }
         btnReject.setOnClickListener { rejectJob() }
+
+        cardJobDetails.setOnClickListener {
+            currentJob?.let { showJobDetailsDialog(it) }
+        }
+
+        cardWorkerInfo.setOnClickListener {
+            currentJob?.workerId?.let { showWorkerDetailsDialog(it) }
+        }
 
         return view
     }
@@ -117,6 +132,7 @@ class ClientRequestsFragment : Fragment() {
     // 🔥 UI STATE: ACTIVE JOB
     // --------------------------------------------------
     private fun showActiveJob(job: Job) {
+        currentJob = job
         layoutContent.visibility        = View.VISIBLE
         layoutEmptyState.visibility     = View.GONE
         progressText.visibility         = View.VISIBLE
@@ -201,6 +217,7 @@ class ClientRequestsFragment : Fragment() {
     // 🔥 EMPTY STATE
     // --------------------------------------------------
     private fun showEmptyState() {
+        currentJob                      = null
         currentJobId                    = null
         layoutContent.visibility        = View.GONE
         layoutEmptyState.visibility     = View.VISIBLE
@@ -213,6 +230,88 @@ class ClientRequestsFragment : Fragment() {
         btnConfirm.visibility           = View.GONE
         btnCancelJob.visibility         = View.GONE
         btnReject.visibility            = View.GONE
+    }
+
+    // --------------------------------------------------
+    // 🔥 DIALOGS: JOB & WORKER DETAILS
+    // --------------------------------------------------
+
+    private fun showJobDetailsDialog(job: Job) {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_job_details_preview, null)
+        val tvTitle = dialogView.findViewById<TextView>(R.id.tvDialogJobTitle)
+        val tvCategory = dialogView.findViewById<TextView>(R.id.tvDialogCategory)
+        val tvSchedule = dialogView.findViewById<TextView>(R.id.tvDialogSchedule)
+        val tvPrice = dialogView.findViewById<TextView>(R.id.tvDialogPrice)
+        val tvDescription = dialogView.findViewById<TextView>(R.id.tvDialogDescription)
+        val layoutImages = dialogView.findViewById<LinearLayout>(R.id.layoutDialogImages)
+
+        tvTitle.text = job.jobTitle
+        tvCategory.text = job.serviceCategory
+        tvSchedule.text = "${job.scheduledDate} at ${job.scheduledTime}"
+        tvPrice.text = "₱${job.offeredAmount}"
+        tvDescription.text = job.description
+
+        if (job.jobImages.isEmpty()) {
+            dialogView.findViewById<View>(R.id.tvNoImages).visibility = View.VISIBLE
+        } else {
+            job.jobImages.forEach { url ->
+                val imageView = ImageView(requireContext())
+                val params = LinearLayout.LayoutParams(
+                    resources.getDimensionPixelSize(R.dimen.preview_image_size),
+                    resources.getDimensionPixelSize(R.dimen.preview_image_size)
+                )
+                params.setMargins(0, 0, 12, 0)
+                imageView.layoutParams = params
+                imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+                imageView.load(url) {
+                    crossfade(true)
+                    placeholder(R.drawable.bg_image_placeholder)
+                }
+                layoutImages.addView(imageView)
+            }
+        }
+
+        AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
+            .setView(dialogView)
+            .setPositiveButton("Close", null)
+            .show()
+    }
+
+    private fun showWorkerDetailsDialog(workerId: String) {
+        firestore.collection("users").document(workerId).get()
+            .addOnSuccessListener { doc ->
+                val worker = doc.toObject(User::class.java) ?: return@addOnSuccessListener
+                
+                val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_worker_details_preview, null)
+                val ivProfile = dialogView.findViewById<ImageView>(R.id.ivWorkerProfile)
+                val tvName = dialogView.findViewById<TextView>(R.id.tvWorkerName)
+                val tvPhone = dialogView.findViewById<TextView>(R.id.tvWorkerPhone)
+                val tvRating = dialogView.findViewById<TextView>(R.id.tvWorkerRating)
+                val tvExperience = dialogView.findViewById<TextView>(R.id.tvWorkerExperience)
+                val tvCategories = dialogView.findViewById<TextView>(R.id.tvWorkerCategories)
+
+                tvName.text = worker.name
+                tvPhone.text = worker.phone
+                
+                // Using names from Firestore transaction logic if they differ from model
+                val ratingAvg = doc.getDouble("ratingAverage") ?: worker.rating
+                val ratingCnt = doc.getLong("ratingCount") ?: worker.totalRatings.toLong()
+                
+                tvRating.text = String.format(Locale.getDefault(), "%.1f (%d reviews)", ratingAvg, ratingCnt)
+                tvExperience.text = "${worker.serviceExperience ?: 0} years experience"
+                tvCategories.text = worker.serviceCategories?.joinToString(", ") ?: "N/A"
+
+                ivProfile.load(worker.profileImage) {
+                    crossfade(true)
+                    placeholder(R.drawable.ic_user_placeholder)
+                    transformations(CircleCropTransformation())
+                }
+
+                AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
+                    .setView(dialogView)
+                    .setPositiveButton("Close", null)
+                    .show()
+            }
     }
 
     // --------------------------------------------------

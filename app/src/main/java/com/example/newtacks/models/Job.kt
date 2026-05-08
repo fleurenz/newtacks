@@ -35,8 +35,10 @@ data class Job(
 
     val status: String = "AVAILABLE",
 
-    // TIMESTAMPS
+    // IMAGES
+    val jobImages: List<String> = emptyList(),
 
+    // TIMESTAMPS
     val createdAt: Long = System.currentTimeMillis(),
     val acceptedAt: Long? = null,
     val completedAt: Long? = null

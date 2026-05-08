@@ -3,6 +3,7 @@ package com.example.newtacks.worker
 import android.os.Bundle
 import android.view.*
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.ViewCompat
@@ -10,6 +11,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.example.newtacks.R
 import com.example.newtacks.models.Job
 import com.google.firebase.auth.FirebaseAuth
@@ -90,6 +92,9 @@ class WorkerFeedFragment : Fragment() {
         val view = layoutInflater.inflate(R.layout.dialog_job_preview, null)
         val tvTitle   = view.findViewById<TextView>(R.id.tvTitle)
         val tvDetails = view.findViewById<TextView>(R.id.tvDetails)
+        val tvDuration = view.findViewById<TextView>(R.id.tvDuration)
+        val layoutImages = view.findViewById<LinearLayout>(R.id.layoutImages)
+        val tvNoImages = view.findViewById<TextView>(R.id.tvNoImages)
         val btnAccept = view.findViewById<Button>(R.id.btnAccept)
         val btnClose  = view.findViewById<Button>(R.id.btnClose)
 
@@ -101,6 +106,27 @@ class WorkerFeedFragment : Fragment() {
             Price: ₱${job.offeredAmount}
             Description: ${job.description}
         """.trimIndent()
+
+        tvDuration.text = "Estimated Duration: ${job.estimatedDurationHours} hours"
+
+        if (job.jobImages.isEmpty()) {
+            tvNoImages.visibility = View.VISIBLE
+        } else {
+            tvNoImages.visibility = View.GONE
+            job.jobImages.forEach { url ->
+                val imageView = ImageView(requireContext())
+                val size = resources.getDimensionPixelSize(R.dimen.preview_image_size)
+                val params = LinearLayout.LayoutParams(size, size)
+                params.setMargins(0, 0, 12, 0)
+                imageView.layoutParams = params
+                imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+                imageView.load(url) {
+                    crossfade(true)
+                    placeholder(R.drawable.bg_image_placeholder)
+                }
+                layoutImages.addView(imageView)
+            }
+        }
 
         val dialog = android.app.AlertDialog.Builder(requireContext())
             .setView(view)

@@ -12,6 +12,11 @@ import com.example.newtacks.models.Job
 import com.example.newtacks.models.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import android.net.Uri
+import androidx.activity.result.contract.ActivityResultContracts
+import com.cloudinary.android.MediaManager
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback
 import java.util.Locale
 import java.util.*
 
@@ -34,10 +39,25 @@ class CreateJobActivity : AppCompatActivity() {
     private lateinit var btnCancel: Button
     private lateinit var btnSubmit: Button
 
+    private lateinit var btnAddPhoto: Button
+    private lateinit var layoutImages: LinearLayout
+
     private var selectedDate = ""
     private var selectedTime = ""
 
     private var isUserEditingTitle = false
+
+    private val selectedImages = mutableListOf<Uri>()
+
+    private val pickImage =
+        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+            uris.forEach { uri ->
+                if (selectedImages.size < 5) {
+                    selectedImages.add(uri)
+                    addImagePreview(uri)
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +102,13 @@ class CreateJobActivity : AppCompatActivity() {
 
         btnCancel = findViewById(R.id.btnCancel)
         btnSubmit = findViewById(R.id.btnSubmit)
+
+        btnAddPhoto = findViewById(R.id.btnAddPhoto)
+        layoutImages = findViewById(R.id.layoutImages)
+
+        btnAddPhoto.setOnClickListener {
+            pickImage.launch("image/*")
+        }
 
         // detect manual editing
         etJobTitle.setOnFocusChangeListener { _, hasFocus ->
@@ -214,6 +241,16 @@ class CreateJobActivity : AppCompatActivity() {
         }
     }
 
+    private fun addImagePreview(uri: Uri) {
+        val imageView = ImageView(this)
+        val params = LinearLayout.LayoutParams(250, 250)
+        params.setMargins(0, 0, 16, 0)
+        imageView.layoutParams = params
+        imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+        imageView.setImageURI(uri)
+        layoutImages.addView(imageView)
+    }
+
     // ---------------- SUBMIT JOB ----------------
 
     private fun submitJob() {
@@ -261,6 +298,7 @@ class CreateJobActivity : AppCompatActivity() {
         }
 
         // ---------------- UI LOCK ----------------
+        btnSubmit.isEnabled = false
 
         // ---------------- CHECK ACTIVE JOB FIRST ----------------
 
@@ -284,48 +322,104 @@ class CreateJobActivity : AppCompatActivity() {
                         "You already have an active request",
                         Toast.LENGTH_LONG
                     ).show()
+                    btnSubmit.isEnabled = true
                     return@addOnSuccessListener
                 }
 
-                // ---------------- CREATE NEW JOB ----------------
-                btnSubmit.isEnabled = false
-                val jobId = firestore.collection("jobs").document().id
-
-                val job = Job(
-                    jobId = jobId,
-                    clientId = currentUser.uid,
-                    clientName = clientName,
-                    clientAddress = clientAddress,
-                    jobTitle = jobTitle,
-                    serviceCategory = serviceCategory,
-                    scheduledDate = selectedDate,
-                    scheduledTime = selectedTime,
-                    estimatedDurationHours = estimatedDuration,
-                    offeredAmount = offeredAmount,
-                    description = description,
-                    status = "AVAILABLE"
-                )
-
-                firestore.collection("jobs")
-                    .document(jobId)
-                    .set(job)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Job Submitted Successfully", Toast.LENGTH_SHORT).show()
-
-                        // Navigate to Dashboard and open the Requests fragment
-                        val intent = Intent(this, ClientDashboardActivity::class.java)
-                        intent.putExtra(ClientDashboardActivity.OPEN_FRAGMENT, "REQUESTS")
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        startActivity(intent)
-                        finish()
-                    }
-                    .addOnFailureListener {
-                        btnSubmit.isEnabled = true
-                        Toast.makeText(this, "Failed to submit job", Toast.LENGTH_SHORT).show()
-                    }
+                // ---------------- UPLOAD IMAGES THEN CREATE JOB ----------------
+                uploadImagesAndCreateJob(currentUser.uid, clientName, clientAddress, jobTitle, serviceCategory, estimatedDuration, offeredAmount, description)
             }
             .addOnFailureListener {
+                btnSubmit.isEnabled = true
                 Toast.makeText(this, "Error checking active jobs", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun uploadImagesAndCreateJob(
+        uid: String,
+        clientName: String,
+        clientAddress: String,
+        jobTitle: String,
+        serviceCategory: String,
+        estimatedDuration: Double,
+        offeredAmount: Double,
+        description: String
+    ) {
+        if (selectedImages.isEmpty()) {
+            finalizeJobCreation(uid, clientName, clientAddress, jobTitle, serviceCategory, estimatedDuration, offeredAmount, description, emptyList())
+            return
+        }
+
+        val uploadedUrls = mutableListOf<String>()
+        var uploadCount = 0
+
+        selectedImages.forEach { uri ->
+            MediaManager.get().upload(uri)
+                .option("folder", "job_requests")
+                .callback(object : UploadCallback {
+                    override fun onStart(requestId: String?) {}
+                    override fun onProgress(requestId: String?, bytes: Long, totalBytes: Long) {}
+                    override fun onSuccess(requestId: String?, resultData: MutableMap<Any?, Any?>?) {
+                        val imageUrl = resultData?.get("secure_url").toString()
+                        uploadedUrls.add(imageUrl)
+                        uploadCount++
+                        if (uploadCount == selectedImages.size) {
+                            finalizeJobCreation(uid, clientName, clientAddress, jobTitle, serviceCategory, estimatedDuration, offeredAmount, description, uploadedUrls)
+                        }
+                    }
+                    override fun onError(requestId: String?, error: ErrorInfo?) {
+                        uploadCount++
+                        if (uploadCount == selectedImages.size) {
+                            finalizeJobCreation(uid, clientName, clientAddress, jobTitle, serviceCategory, estimatedDuration, offeredAmount, description, uploadedUrls)
+                        }
+                    }
+                    override fun onReschedule(requestId: String?, error: ErrorInfo?) {}
+                }).dispatch()
+        }
+    }
+
+    private fun finalizeJobCreation(
+        uid: String,
+        clientName: String,
+        clientAddress: String,
+        jobTitle: String,
+        serviceCategory: String,
+        estimatedDuration: Double,
+        offeredAmount: Double,
+        description: String,
+        jobImages: List<String>
+    ) {
+        val jobId = firestore.collection("jobs").document().id
+        val job = Job(
+            jobId = jobId,
+            clientId = uid,
+            clientName = clientName,
+            clientAddress = clientAddress,
+            jobTitle = jobTitle,
+            serviceCategory = serviceCategory,
+            scheduledDate = selectedDate,
+            scheduledTime = selectedTime,
+            estimatedDurationHours = estimatedDuration,
+            offeredAmount = offeredAmount,
+            description = description,
+            status = "AVAILABLE",
+            jobImages = jobImages
+        )
+
+        firestore.collection("jobs")
+            .document(jobId)
+            .set(job)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Job Submitted Successfully", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this, ClientDashboardActivity::class.java)
+                intent.putExtra(ClientDashboardActivity.OPEN_FRAGMENT, "REQUESTS")
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+            }
+            .addOnFailureListener {
+                btnSubmit.isEnabled = true
+                Toast.makeText(this, "Failed to submit job", Toast.LENGTH_SHORT).show()
             }
     }
 }
