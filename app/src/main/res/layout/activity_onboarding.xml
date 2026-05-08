@@ -77,6 +77,7 @@
 
         <!-- TERMS -->
         <TextView
+            android:id="@+id/tvTerms"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
@@ -84,7 +85,9 @@
             android:textColor="@color/hint"
             android:textSize="12sp"
             android:gravity="center"
-            android:lineSpacingExtra="2dp" />
+            android:lineSpacingExtra="2dp"
+            android:clickable="true"
+            android:focusable="true" />
 
     </LinearLayout>
 

@@ -29,7 +29,9 @@
                 android:layout_gravity="center"
                 android:scaleType="fitCenter"
                 android:src="@drawable/tacks_logo" />
+
         </FrameLayout>
+
     </LinearLayout>
 
     <!-- ===== BOTTOM: White rounded card ===== -->
@@ -76,6 +78,7 @@
                 android:layout_height="wrap_content"
                 android:autofillHints="emailAddress"
                 android:inputType="textEmailAddress" />
+
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Password Input -->
@@ -93,9 +96,10 @@
                 android:layout_height="wrap_content"
                 android:autofillHints="password"
                 android:inputType="textPassword" />
+
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Forgot Password (plain text) -->
+        <!-- Forgot Password -->
         <TextView
             android:id="@+id/forgotPassword"
             android:layout_width="wrap_content"
@@ -132,9 +136,10 @@
                 android:layout_gravity="center"
                 android:indeterminateTint="#FFFFFF"
                 android:visibility="gone" />
+
         </FrameLayout>
 
-        <!-- Log in with Google (plain text) -->
+        <!-- Log in with Google -->
         <TextView
             android:id="@+id/googleBtn"
             android:layout_width="wrap_content"

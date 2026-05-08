@@ -3,6 +3,8 @@ package com.example.newtacks.worker
 import android.os.Bundle
 import android.view.*
 import android.widget.*
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.example.newtacks.R
 import com.example.newtacks.models.Job
@@ -22,6 +24,7 @@ class WorkerJobFragment : Fragment() {
     private lateinit var layoutContent: LinearLayout
     private lateinit var layoutEmptyState: LinearLayout
     private lateinit var layoutBottomButtons: LinearLayout
+    private lateinit var layoutHeader: LinearLayout
 
     private var currentJobId: String? = null
 
@@ -32,18 +35,31 @@ class WorkerJobFragment : Fragment() {
     ): View {
         val view = inflater.inflate(R.layout.fragment_worker_job, container, false)
 
-        tvTitle = view.findViewById(R.id.tvJobTitle)
-        tvDetails = view.findViewById(R.id.tvJobDetails)
-        tvStatus = view.findViewById(R.id.tvJobStatus)
-        btnDone = view.findViewById(R.id.btnRequestDone)
-        layoutContent = view.findViewById(R.id.layoutContent)
-        layoutEmptyState = view.findViewById(R.id.layoutEmptyState)
+        tvTitle             = view.findViewById(R.id.tvJobTitle)
+        tvDetails           = view.findViewById(R.id.tvJobDetails)
+        tvStatus            = view.findViewById(R.id.tvJobStatus)
+        btnDone             = view.findViewById(R.id.btnRequestDone)
+        layoutContent       = view.findViewById(R.id.layoutContent)
+        layoutEmptyState    = view.findViewById(R.id.layoutEmptyState)
         layoutBottomButtons = view.findViewById(R.id.layoutBottomButtons)
+        layoutHeader        = view.findViewById(R.id.layoutHeader)
+
+        // --------------------------------------------------
+        // ✅ WINDOW INSETS
+        // --------------------------------------------------
+        ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            layoutHeader.setPadding(
+                layoutHeader.paddingLeft,
+                systemBars.top + resources.getDimensionPixelSize(R.dimen.header_padding_top),
+                layoutHeader.paddingRight,
+                layoutHeader.paddingBottom
+            )
+            insets
+        }
 
         listenForActiveJob()
-
         btnDone.setOnClickListener { requestDone() }
-
 
         return view
     }
@@ -58,13 +74,8 @@ class WorkerJobFragment : Fragment() {
             .whereIn("status", listOf("IN_PROGRESS", "PENDING_VERIFICATION"))
             .limit(1)
             .addSnapshotListener { snapshots, _ ->
-                val job = snapshots?.documents?.firstOrNull()
-                    ?.toObject(Job::class.java)
-                if (job == null) {
-                    showEmptyState()
-                } else {
-                    showActiveJob(job)
-                }
+                val job = snapshots?.documents?.firstOrNull()?.toObject(Job::class.java)
+                if (job == null) showEmptyState() else showActiveJob(job)
             }
     }
 
@@ -72,11 +83,10 @@ class WorkerJobFragment : Fragment() {
     // UI STATE: ACTIVE JOB
     // --------------------------------------------------
     private fun showActiveJob(job: Job) {
-        currentJobId = job.jobId
-        layoutContent.visibility = View.VISIBLE
+        currentJobId                = job.jobId
+        layoutContent.visibility    = View.VISIBLE
         layoutEmptyState.visibility = View.GONE
         layoutBottomButtons.visibility = View.VISIBLE
-
 
         tvTitle.text = job.jobTitle
         tvDetails.text = """
@@ -85,7 +95,6 @@ class WorkerJobFragment : Fragment() {
             ₱${job.offeredAmount}
         """.trimIndent()
 
-        // status badge
         tvStatus.visibility = View.VISIBLE
         when (job.status) {
             "IN_PROGRESS" -> {
@@ -105,26 +114,22 @@ class WorkerJobFragment : Fragment() {
             }
         }
 
-        btnDone.visibility =
-            if (job.status == "IN_PROGRESS") View.VISIBLE else View.GONE
+        btnDone.visibility = if (job.status == "IN_PROGRESS") View.VISIBLE else View.GONE
     }
 
     // --------------------------------------------------
     // UI STATE: EMPTY
     // --------------------------------------------------
     private fun showEmptyState() {
-        currentJobId = null
-        layoutContent.visibility = View.GONE
-        layoutEmptyState.visibility = View.VISIBLE
-        layoutBottomButtons.visibility = View.GONE  // ← clean
-
-        tvTitle.text = "No Active Job"
-        tvStatus.visibility = View.GONE
-        tvStatus.background = null
-        btnDone.visibility = View.GONE
+        currentJobId                   = null
+        layoutContent.visibility       = View.GONE
+        layoutEmptyState.visibility    = View.VISIBLE
+        layoutBottomButtons.visibility = View.GONE
+        tvTitle.text                   = ""
+        tvStatus.visibility            = View.GONE
+        tvStatus.background            = null
+        btnDone.visibility             = View.GONE
     }
-
-
 
     // --------------------------------------------------
     // ACTION: REQUEST DONE
@@ -135,7 +140,7 @@ class WorkerJobFragment : Fragment() {
             .document(jobId)
             .update(
                 mapOf(
-                    "status" to "PENDING_VERIFICATION",
+                    "status"      to "PENDING_VERIFICATION",
                     "completedAt" to System.currentTimeMillis()
                 )
             )

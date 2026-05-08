@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/signupRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="#004A99">
 
     <!-- ===== TOP: Blue with logo ===== -->
@@ -12,8 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="220dp"
         android:orientation="vertical"
-        android:gravity="center"
-        android:paddingTop="48dp">
+        android:gravity="center">
 
         <FrameLayout
             android:layout_width="140dp"
@@ -34,10 +35,12 @@
     </LinearLayout>
 
     <!-- ===== BOTTOM: White rounded card ===== -->
+    <!-- ✅ layout_weight="1" makes it fill exactly the remaining space, no more -->
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/topSection">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -73,7 +76,6 @@
                 android:hint="Email"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_marginBottom="14dp">
-
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etEmail"
                     android:layout_width="match_parent"
@@ -90,7 +92,6 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 app:passwordToggleEnabled="true"
                 android:layout_marginBottom="14dp">
-
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPassword"
                     android:layout_width="match_parent"
@@ -107,7 +108,6 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 app:passwordToggleEnabled="true"
                 android:layout_marginBottom="20dp">
-
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etConfirmPassword"
                     android:layout_width="match_parent"
@@ -342,5 +342,4 @@
 
         </LinearLayout>
     </ScrollView>
-
-</RelativeLayout>
+</LinearLayout>

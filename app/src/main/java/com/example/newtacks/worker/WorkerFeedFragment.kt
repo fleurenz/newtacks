@@ -3,7 +3,10 @@ package com.example.newtacks.worker
 import android.os.Bundle
 import android.view.*
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -17,8 +20,10 @@ class WorkerFeedFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: WorkerJobAdapter
-    private val db = FirebaseFirestore.getInstance()
+    private lateinit var layoutHeader: LinearLayout
+    private lateinit var layoutEmptyState: LinearLayout
 
+    private val db = FirebaseFirestore.getInstance()
     private var listener: ListenerRegistration? = null
     private val jobList = mutableListOf<Job>()
 
@@ -27,61 +32,68 @@ class WorkerFeedFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
         val view = inflater.inflate(R.layout.fragment_worker_feed, container, false)
 
-        recyclerView = view.findViewById(R.id.workerFeedRecycler)
+        recyclerView     = view.findViewById(R.id.workerFeedRecycler)
+        layoutHeader     = view.findViewById(R.id.layoutHeader)
+        layoutEmptyState = view.findViewById(R.id.layoutEmptyState)
+
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-
-        adapter = WorkerJobAdapter(jobList) { job ->
-            showJobPreview(job)
-        }
-
+        adapter = WorkerJobAdapter(jobList) { job -> showJobPreview(job) }
         recyclerView.adapter = adapter
 
-        listenForJobs()
+        // --------------------------------------------------
+        // ✅ WINDOW INSETS
+        // --------------------------------------------------
+        ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            layoutHeader.setPadding(
+                layoutHeader.paddingLeft,
+                systemBars.top + resources.getDimensionPixelSize(R.dimen.header_padding_top),
+                layoutHeader.paddingRight,
+                layoutHeader.paddingBottom
+            )
+            insets
+        }
 
+        listenForJobs()
         return view
     }
 
     // --------------------------------------------------
     // LIVE JOB FEED
     // --------------------------------------------------
-
     private fun listenForJobs() {
-
         listener = db.collection("jobs")
             .whereEqualTo("status", "AVAILABLE")
             .addSnapshotListener { snapshots, _ ->
-
                 if (snapshots == null) return@addSnapshotListener
-
                 jobList.clear()
-
                 for (doc in snapshots) {
                     val job = doc.toObject(Job::class.java)
                     jobList.add(job)
                 }
-
                 adapter.notifyDataSetChanged()
+
+                // toggle empty state
+                layoutEmptyState.visibility =
+                    if (jobList.isEmpty()) View.VISIBLE else View.GONE
+                recyclerView.visibility =
+                    if (jobList.isEmpty()) View.GONE else View.VISIBLE
             }
     }
 
     // --------------------------------------------------
     // JOB PREVIEW POPUP
     // --------------------------------------------------
-
     private fun showJobPreview(job: Job) {
-
         val view = layoutInflater.inflate(R.layout.dialog_job_preview, null)
-
-        val tvTitle = view.findViewById<TextView>(R.id.tvTitle)
+        val tvTitle   = view.findViewById<TextView>(R.id.tvTitle)
         val tvDetails = view.findViewById<TextView>(R.id.tvDetails)
         val btnAccept = view.findViewById<Button>(R.id.btnAccept)
-        val btnClose = view.findViewById<Button>(R.id.btnClose)
+        val btnClose  = view.findViewById<Button>(R.id.btnClose)
 
         tvTitle.text = job.jobTitle
-
         tvDetails.text = """
             Category: ${job.serviceCategory}
             Client: ${job.clientName}
@@ -94,84 +106,48 @@ class WorkerFeedFragment : Fragment() {
             .setView(view)
             .create()
 
-        btnClose.setOnClickListener {
-            dialog.dismiss()
-        }
-
+        btnClose.setOnClickListener { dialog.dismiss() }
         btnAccept.setOnClickListener {
             dialog.dismiss()
             acceptJob(job)
         }
 
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
         dialog.show()
     }
 
     // --------------------------------------------------
     // ACCEPT JOB (FIRESTORE TRANSACTION)
     // --------------------------------------------------
-
     private fun acceptJob(job: Job) {
-
         val currentUser = FirebaseAuth.getInstance().currentUser ?: return
         val workerId = currentUser.uid
 
-        // --------------------------------------------------
-        // CHECK IF WORKER ALREADY HAS ACTIVE JOB
-        // --------------------------------------------------
-
         db.collection("jobs")
             .whereEqualTo("workerId", workerId)
-            .whereIn(
-                "status",
-                listOf(
-                    "IN_PROGRESS",
-                    "PENDING_VERIFICATION"
-                )
-            )
+            .whereIn("status", listOf("IN_PROGRESS", "PENDING_VERIFICATION"))
             .get()
             .addOnSuccessListener { snapshots ->
-
-                // WORKER ALREADY HAS ACTIVE JOB
                 if (!snapshots.isEmpty) {
-
                     android.widget.Toast.makeText(
                         requireContext(),
                         "Finish your current job first",
                         android.widget.Toast.LENGTH_LONG
                     ).show()
-
                     return@addOnSuccessListener
                 }
-
-                // --------------------------------------------------
-                // FETCH WORKER NAME
-                // --------------------------------------------------
 
                 db.collection("users")
                     .document(workerId)
                     .get()
                     .addOnSuccessListener { doc ->
-
-                        val workerName =
-                            doc.getString("name") ?: "Worker"
-
-                        // --------------------------------------------------
-                        // FIRESTORE TRANSACTION
-                        // --------------------------------------------------
+                        val workerName = doc.getString("name") ?: "Worker"
 
                         db.runTransaction { transaction ->
-
-                            val ref = db.collection("jobs")
-                                .document(job.jobId)
-
+                            val ref = db.collection("jobs").document(job.jobId)
                             val snapshot = transaction.get(ref)
+                            val status = snapshot.getString("status")
 
-                            val status =
-                                snapshot.getString("status")
-
-                            // JOB ALREADY TAKEN
                             if (status != "AVAILABLE") {
                                 throw Exception("Job already taken")
                             }
@@ -179,8 +155,8 @@ class WorkerFeedFragment : Fragment() {
                             transaction.update(
                                 ref,
                                 mapOf(
-                                    "status" to "IN_PROGRESS",
-                                    "workerId" to workerId,
+                                    "status"     to "IN_PROGRESS",
+                                    "workerId"   to workerId,
                                     "workerName" to workerName,
                                     "acceptedAt" to System.currentTimeMillis()
                                 )
@@ -193,7 +169,6 @@ class WorkerFeedFragment : Fragment() {
     // --------------------------------------------------
     // CLEANUP
     // --------------------------------------------------
-
     override fun onDestroyView() {
         super.onDestroyView()
         listener?.remove()

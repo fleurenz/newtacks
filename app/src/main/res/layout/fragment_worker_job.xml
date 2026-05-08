@@ -9,6 +9,7 @@
 
     <!-- ===== HEADER ===== -->
     <LinearLayout
+        android:id="@+id/layoutHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -51,6 +52,7 @@
             android:paddingTop="5dp"
             android:paddingBottom="5dp"
             android:visibility="gone" />
+
     </LinearLayout>
 
     <!-- ===== SCROLLABLE BODY ===== -->
@@ -103,6 +105,7 @@
                             android:textSize="11sp"
                             android:textStyle="bold"
                             android:letterSpacing="0.1" />
+
                     </LinearLayout>
 
                     <TextView
@@ -112,6 +115,7 @@
                         android:textColor="#1E293B"
                         android:textSize="14sp"
                         android:lineSpacingExtra="6dp" />
+
                 </LinearLayout>
 
                 <!-- INFO HINT CARD -->
@@ -131,7 +135,9 @@
                         android:textColor="#004A99"
                         android:textSize="12sp"
                         android:lineSpacingExtra="3dp" />
+
                 </LinearLayout>
+
             </LinearLayout>
 
             <!-- ===== EMPTY STATE ===== -->
@@ -169,9 +175,11 @@
                     android:textSize="13sp"
                     android:gravity="center"
                     android:lineSpacingExtra="4dp" />
+
             </LinearLayout>
 
         </LinearLayout>
+
     </ScrollView>
 
     <!-- ===== BOTTOM BUTTON ===== -->
