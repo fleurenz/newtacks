@@ -10,6 +10,8 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import coil.load
+import coil.transform.CircleCropTransformation
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -25,6 +27,7 @@ class WorkerAccountFragment : Fragment() {
     private val auth = FirebaseAuth.getInstance()
     private lateinit var tvWorkerName: TextView
     private lateinit var tvWorkerRating: TextView
+    private lateinit var ivWorkerProfile: ImageView
     private lateinit var tvAcceptedJobs: TextView
     private lateinit var tvCompletedJobs: TextView
     private lateinit var reviewContainer: LinearLayout
@@ -50,6 +53,7 @@ class WorkerAccountFragment : Fragment() {
 
         tvWorkerName    = view.findViewById(R.id.tvWorkerName)
         tvWorkerRating  = view.findViewById(R.id.tvWorkerRating)
+        ivWorkerProfile = view.findViewById(R.id.ivWorkerProfile)
         tvAcceptedJobs  = view.findViewById(R.id.tvAcceptedJobs)
         tvCompletedJobs = view.findViewById(R.id.tvCompletedJobs)
         reviewContainer = view.findViewById(R.id.reviewContainer)
@@ -141,8 +145,19 @@ class WorkerAccountFragment : Fragment() {
                 val name  = doc.getString("name") ?: "Worker"
                 val avg   = doc.getDouble("ratingAverage") ?: 0.0
                 val count = doc.getLong("ratingCount") ?: 0
+                val profileImage = doc.getString("profileImage")
+
                 tvWorkerName.text   = name
                 tvWorkerRating.text = "%.1f (%d reviews)".format(avg, count)
+
+                if (!profileImage.isNullOrEmpty()) {
+                    ivWorkerProfile.load(profileImage) {
+                        crossfade(true)
+                        transformations(CircleCropTransformation())
+                        placeholder(R.drawable.ic_person_placeholder)
+                        error(R.drawable.ic_person_placeholder)
+                    }
+                }
             }
     }
 

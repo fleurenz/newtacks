@@ -9,6 +9,8 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import coil.load
+import coil.transform.CircleCropTransformation
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -24,6 +26,7 @@ class ClientAccountFragment : Fragment() {
     private lateinit var tvName: TextView
     private lateinit var tvEmail: TextView
     private lateinit var tvAddress: TextView
+    private lateinit var ivProfile: ImageView
     private lateinit var tvTotalRequests: TextView
     private lateinit var tvCompletedRequests: TextView
     private lateinit var btnLogout: Button
@@ -39,6 +42,7 @@ class ClientAccountFragment : Fragment() {
         tvName              = view.findViewById(R.id.tvName)
         tvEmail             = view.findViewById(R.id.tvEmail)
         tvAddress           = view.findViewById(R.id.tvAddress)
+        ivProfile           = view.findViewById(R.id.ivProfile)
         tvTotalRequests     = view.findViewById(R.id.tvTotalRequests)
         tvCompletedRequests = view.findViewById(R.id.tvCompletedRequests)
         btnLogout           = view.findViewById(R.id.btnLogout)
@@ -73,6 +77,16 @@ class ClientAccountFragment : Fragment() {
                 tvName.text    = doc.getString("name") ?: "Client"
                 tvEmail.text   = doc.getString("email") ?: ""
                 tvAddress.text = doc.getString("address") ?: ""
+
+                val profileImage = doc.getString("profileImage")
+                if (!profileImage.isNullOrEmpty()) {
+                    ivProfile.load(profileImage) {
+                        crossfade(true)
+                        transformations(CircleCropTransformation())
+                        placeholder(R.drawable.ic_person_placeholder)
+                        error(R.drawable.ic_person_placeholder)
+                    }
+                }
             }
     }
 
