@@ -1,15 +1,18 @@
 package com.example.newtacks.authentication
 
-import  android.app.Dialog
+import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.RadioGroup
 import android.widget.TextView
-import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.example.newtacks.R
 
 class RoleSelectionActivity : AppCompatActivity() {
@@ -18,7 +21,31 @@ class RoleSelectionActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_role_selection)
+
+        val topSection    = findViewById<LinearLayout>(R.id.topSection)
+        val bottomButtons = findViewById<LinearLayout>(R.id.bottomButtons)
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            topSection.setPadding(
+                topSection.paddingLeft,
+                systemBars.top,
+                topSection.paddingRight,
+                topSection.paddingBottom
+            )
+
+            bottomButtons.setPadding(
+                bottomButtons.paddingLeft,
+                bottomButtons.paddingTop,
+                bottomButtons.paddingRight,
+                systemBars.bottom
+            )
+
+            insets
+        }
 
         roleGroup = findViewById(R.id.roleGroup)
 
@@ -31,10 +58,7 @@ class RoleSelectionActivity : AppCompatActivity() {
         findViewById<LinearLayout>(R.id.cardCompany).setOnClickListener {
             roleGroup.check(R.id.rbCompany)
         }
-
-        findViewById<Button>(R.id.btnContinue).setOnClickListener {
-            handleContinue()
-        }
+        findViewById<Button>(R.id.btnContinue).setOnClickListener { handleContinue() }
         findViewById<Button>(R.id.btnBack).setOnClickListener {
             startActivity(Intent(this, OnboardingActivity::class.java))
             finish()
@@ -44,6 +68,7 @@ class RoleSelectionActivity : AppCompatActivity() {
             finish()
         }
     }
+
 
     private fun handleContinue() {
         val selectedRole = when (roleGroup.checkedRadioButtonId) {
