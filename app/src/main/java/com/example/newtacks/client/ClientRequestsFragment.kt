@@ -1,5 +1,5 @@
 package com.example.newtacks.client
-
+import android.app.Dialog
 import android.os.Bundle
 import android.view.*
 import android.view.animation.AlphaAnimation
@@ -14,13 +14,10 @@ import com.example.newtacks.models.Receipt
 import com.example.newtacks.models.Review
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
-
 class ClientRequestsFragment : Fragment() {
-
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private var listener: ListenerRegistration? = null
-
     private lateinit var tvTitle: TextView
     private lateinit var tvDetails: TextView
     private lateinit var btnConfirm: Button
@@ -33,17 +30,14 @@ class ClientRequestsFragment : Fragment() {
     private lateinit var layoutProgressLabels: LinearLayout
     private lateinit var layoutBottomButtons: LinearLayout
     private lateinit var layoutHeader: LinearLayout
-
     private var currentJobId: String? = null
     private var lastCancelTime: Long = 0
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         val view = inflater.inflate(R.layout.fragment_client_requests, container, false)
-
         tvTitle              = view.findViewById(R.id.tvRequestTitle)
         tvDetails            = view.findViewById(R.id.tvRequestDetails)
         btnConfirm           = view.findViewById(R.id.btnConfirm)
@@ -56,13 +50,11 @@ class ClientRequestsFragment : Fragment() {
         layoutProgressLabels = view.findViewById(R.id.layoutProgressLabels)
         layoutBottomButtons  = view.findViewById(R.id.layoutBottomButtons)
         layoutHeader         = view.findViewById(R.id.layoutHeader)
-
         // --------------------------------------------------
         // ✅ WINDOW INSETS — push header down below status bar
         // --------------------------------------------------
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
             // Add status bar height on top of existing paddingTop (36dp)
             layoutHeader.setPadding(
                 layoutHeader.paddingLeft,
@@ -70,18 +62,14 @@ class ClientRequestsFragment : Fragment() {
                 layoutHeader.paddingRight,
                 layoutHeader.paddingBottom
             )
-
             insets
         }
-
         listenForActiveJob()
         btnConfirm.setOnClickListener { confirmJob() }
         btnCancelJob.setOnClickListener { showCancelConfirmationDialog() }
         btnReject.setOnClickListener { rejectJob() }
-
         return view
     }
-
     // --------------------------------------------------
     // 🔥 REALTIME ACTIVE JOB LISTENER
     // --------------------------------------------------
@@ -102,7 +90,6 @@ class ClientRequestsFragment : Fragment() {
                 }
             }
     }
-
     // --------------------------------------------------
     // 🔥 UI STATE: ACTIVE JOB
     // --------------------------------------------------
@@ -114,7 +101,6 @@ class ClientRequestsFragment : Fragment() {
         layoutProgressLabels.visibility = View.VISIBLE
         layoutBottomButtons.visibility  =
             if (job.status == "PENDING_VERIFICATION" || job.status == "AVAILABLE") View.VISIBLE else View.GONE
-
         currentJobId   = job.jobId
         tvTitle.text   = job.jobTitle
         tvDetails.text = """
@@ -122,7 +108,6 @@ class ClientRequestsFragment : Fragment() {
             Worker: ${job.workerName ?: "Waiting for worker..."}
             Price: ₱${job.offeredAmount}
         """.trimIndent()
-
         when (job.status) {
             "AVAILABLE" -> {
                 progressText.text = "Waiting for worker..."
@@ -157,7 +142,6 @@ class ClientRequestsFragment : Fragment() {
                 btnReject.visibility = View.GONE
             }
         }
-
         progressBar.progress = when (job.status) {
             "AVAILABLE"            -> 25
             "IN_PROGRESS"          -> 60
@@ -165,7 +149,6 @@ class ClientRequestsFragment : Fragment() {
             else                   -> 0
         }
     }
-
     // --------------------------------------------------
     // 🔥 EMPTY STATE
     // --------------------------------------------------
@@ -182,7 +165,6 @@ class ClientRequestsFragment : Fragment() {
         btnCancelJob.visibility         = View.GONE
         btnReject.visibility            = View.GONE
     }
-
     // --------------------------------------------------
     // 🔥 ANIMATION
     // --------------------------------------------------
@@ -191,21 +173,40 @@ class ClientRequestsFragment : Fragment() {
         anim.duration = 300
         view?.startAnimation(anim)
     }
-
     // --------------------------------------------------
     // 🔥 CANCEL JOB
     // --------------------------------------------------
     private fun showCancelConfirmationDialog() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Cancel Job Request")
-            .setMessage("Are you sure you want to cancel this request? This action cannot be undone.")
-            .setPositiveButton("Yes, Cancel") { _, _ ->
-                cancelJob()
-            }
-            .setNegativeButton("No", null)
-            .show()
-    }
+        val dialog = Dialog(requireContext())
+        dialog.setContentView(R.layout.dialog_role_select)
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.88).toInt(),
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        )
 
+        val icon = dialog.findViewById<ImageView>(R.id.dialogIcon)
+        val title = dialog.findViewById<TextView>(R.id.dialogTitle)
+        val message = dialog.findViewById<TextView>(R.id.dialogMessage)
+        val btnPositive = dialog.findViewById<com.google.android.material.button.MaterialButton>(R.id.dialogBtnPositive)
+        val btnNegative = dialog.findViewById<com.google.android.material.button.MaterialButton>(R.id.dialogBtnNegative)
+
+        icon.setImageResource(R.drawable.ic_close) // Using ic_close for cancellation
+        title.text = "Cancel Job Request"
+        message.text = "Are you sure you want to cancel this request? This action cannot be undone."
+        btnPositive.text = "Yes, Cancel"
+        btnNegative.text = "No"
+
+        btnPositive.setOnClickListener {
+            dialog.dismiss()
+            cancelJob()
+        }
+        btnNegative.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
     private fun cancelJob() {
         val jobId = currentJobId ?: return
         firestore.collection("jobs")
@@ -219,7 +220,6 @@ class ClientRequestsFragment : Fragment() {
                 Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-
     // --------------------------------------------------
     // 🔥 CONFIRM JOB
     // --------------------------------------------------
@@ -238,7 +238,6 @@ class ClientRequestsFragment : Fragment() {
                 fetchJobAndGenerateReceipt(jobId)
             }
     }
-
     // --------------------------------------------------
     // 🔥 FETCH JOB
     // --------------------------------------------------
@@ -251,7 +250,6 @@ class ClientRequestsFragment : Fragment() {
                 if (job != null) generateReceipt(job)
             }
     }
-
     // --------------------------------------------------
     // 🔥 RECEIPT
     // --------------------------------------------------
@@ -279,7 +277,6 @@ class ClientRequestsFragment : Fragment() {
                 showReviewDialog(job)
             }
     }
-
     // --------------------------------------------------
     // 🔥 NOTIFICATION
     // --------------------------------------------------
@@ -293,7 +290,6 @@ class ClientRequestsFragment : Fragment() {
                 )
             )
     }
-
     // --------------------------------------------------
     // 🔥 REJECT / COOLDOWN
     // --------------------------------------------------
@@ -312,7 +308,6 @@ class ClientRequestsFragment : Fragment() {
                 Toast.makeText(requireContext(), "Returned to worker", Toast.LENGTH_SHORT).show()
             }
     }
-
     // --------------------------------------------------
     // 🔥 REVIEW DIALOG
     // --------------------------------------------------
@@ -320,6 +315,7 @@ class ClientRequestsFragment : Fragment() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_review, null)
         val ratingBar  = dialogView.findViewById<RatingBar>(R.id.ratingBar)
         val etComment  = dialogView.findViewById<EditText>(R.id.etComment)
+        val cbAnonymous = dialogView.findViewById<CheckBox>(R.id.cbAnonymous)
 
         AlertDialog.Builder(requireContext())
             .setTitle("Rate Worker")
@@ -332,14 +328,14 @@ class ClientRequestsFragment : Fragment() {
                     clientName = job.clientName,
                     workerId = job.workerId ?: "",
                     rating   = ratingBar.rating,
-                    comment  = etComment.text.toString()
+                    comment  = etComment.text.toString(),
+                    isAnonymous = cbAnonymous.isChecked
                 )
                 saveReview(review)
             }
             .setNegativeButton("Skip", null)
             .show()
     }
-
     // --------------------------------------------------
     // 🔥 SAVE REVIEW
     // --------------------------------------------------
@@ -349,7 +345,6 @@ class ClientRequestsFragment : Fragment() {
             .set(review)
             .addOnSuccessListener { updateWorkerRating(review) }
     }
-
     // --------------------------------------------------
     // 🔥 UPDATE WORKER RATING
     // --------------------------------------------------
@@ -370,7 +365,6 @@ class ClientRequestsFragment : Fragment() {
             )
         }
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         listener?.remove()

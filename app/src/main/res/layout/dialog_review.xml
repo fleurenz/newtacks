@@ -103,4 +103,13 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
+    <CheckBox
+        android:id="@+id/cbAnonymous"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Post anonymously"
+        android:layout_marginTop="12dp"
+        android:textColor="#4B5563"
+        android:textSize="13sp" />
+
 </LinearLayout>
