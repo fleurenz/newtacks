@@ -8,6 +8,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.newtacks.R
 import com.example.newtacks.models.Receipt
 import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class ReceiptDetailActivity : AppCompatActivity() {
 
@@ -36,6 +39,10 @@ class ReceiptDetailActivity : AppCompatActivity() {
                 findViewById<TextView>(R.id.tvWorkerName).text = receipt.workerName
                 findViewById<TextView>(R.id.tvAmount).text = "₱${receipt.amount}"
                 findViewById<TextView>(R.id.tvService).text = receipt.serviceCategory
+
+                val sdf = SimpleDateFormat("dd/MM/yy hh:mm a", Locale.getDefault())
+                findViewById<TextView>(R.id.tvRequestedDate).text = sdf.format(Date(receipt.createdAt))
+                findViewById<TextView>(R.id.tvCompletedDate).text = sdf.format(Date(receipt.completedAt))
             }
 
         findViewById<com.google.android.material.button.MaterialButton>(R.id.btnOkay).setOnClickListener {

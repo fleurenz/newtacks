@@ -266,6 +266,22 @@
             app:iconTint="#FFFFFF" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancelJob"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginBottom="10dp"
+            android:text="Cancel Job Request"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:backgroundTint="#DC2626"
+            app:cornerRadius="14dp"
+            app:icon="@drawable/ic_close"
+            app:iconGravity="textStart"
+            app:iconTint="#FFFFFF" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnReject"
             android:layout_width="match_parent"
             android:layout_height="54dp"
