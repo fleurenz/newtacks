@@ -5,7 +5,8 @@
     android:id="@+id/clientRootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="#F0F4F8">
 
     <FrameLayout
         android:id="@+id/clientFragmentContainer"
@@ -17,6 +18,14 @@
         android:id="@+id/clientBottomNav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:menu="@menu/client_bottom_menu" />
+        android:background="@drawable/bg_bottom_nav"
+        android:elevation="12dp"
+        app:menu="@menu/client_bottom_menu"
+        app:itemIconSize="22dp"
+        app:itemIconTint="@color/nav_item_color"
+        app:itemTextColor="@color/nav_item_color"
+        app:labelVisibilityMode="selected"
+        app:itemPaddingTop="8dp"
+        app:itemPaddingBottom="8dp" />
 
 </LinearLayout>

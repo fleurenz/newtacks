@@ -25,23 +25,31 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // ✅ Same approach as all other screens
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
         setContentView(R.layout.activity_login)
 
         val topSection = findViewById<LinearLayout>(R.id.topSection)
+        val bottomCard = findViewById<LinearLayout>(R.id.bottomCard)
 
-        // ✅ Only push the top blue section down — leave white card alone
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            // Push top section down for status bar
             topSection.setPadding(
                 topSection.paddingLeft,
                 systemBars.top,
                 topSection.paddingRight,
                 topSection.paddingBottom
             )
+
+            // Push bottom card up for navigation bar
+            bottomCard.setPadding(
+                bottomCard.paddingLeft,
+                bottomCard.paddingTop,
+                bottomCard.paddingRight,
+                systemBars.bottom + resources.getDimensionPixelSize(R.dimen.spacing_24)
+            )
+
             insets
         }
 
