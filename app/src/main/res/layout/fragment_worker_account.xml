@@ -1,87 +1,221 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5">
+    android:background="#F8FAFC"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <!-- NAME -->
-        <TextView
-            android:id="@+id/tvWorkerName"
-            android:text="Worker Name"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-        <!-- RATING -->
-        <TextView
-            android:id="@+id/tvWorkerRating"
-            android:text="⭐ 0.0 (0 reviews)"
-            android:textSize="16sp"
-            android:layout_marginTop="8dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-        <!-- STATS CARD -->
+        <!-- ===== HERO SECTION ===== -->
         <LinearLayout
+            android:id="@+id/layoutHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#FFFFFF"
-            android:padding="16dp"
-            android:elevation="3dp"
-            android:layout_marginTop="20dp">
+            android:background="#004A99"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="40dp"
+            android:paddingBottom="32dp">
+
+            <ImageView
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:src="@drawable/ic_person_placeholder"
+                android:background="@drawable/bg_circle_translucent"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp"
+                android:contentDescription="Worker Icon" />
 
             <TextView
-                android:id="@+id/tvAcceptedJobs"
-                android:text="Accepted Jobs: 0"
-                android:textSize="16sp"
+                android:id="@+id/tvWorkerName"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:text="Worker Name"
+                android:textColor="#FFFFFF"
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tvCompletedJobs"
-                android:text="Completed Jobs: 0"
-                android:textSize="16sp"
-                android:layout_marginTop="10dp"
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⭐"
+                    android:textSize="14sp"
+                    android:textColor="#FFD54F" />
+
+                <TextView
+                    android:id="@+id/tvWorkerRating"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0.0 (0 reviews)"
+                    android:textColor="#D6E6F5"
+                    android:textSize="14sp"
+                    android:layout_marginStart="6dp" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-        <!-- REVIEWS TITLE -->
-        <TextView
-            android:text="Reviews"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:layout_marginTop="24dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-        <!-- REVIEW LIST -->
+        <!-- ===== CONTENT AREA ===== -->
         <LinearLayout
-            android:id="@+id/reviewContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"/>
+            android:padding="16dp">
 
-        <!-- 🔥 LOGOUT BUTTON -->
-        <Button
-            android:id="@+id/btnLogout"
-            android:text="Logout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            android:backgroundTint="#E53935"
-            android:textColor="#FFFFFF"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="WORKER STATISTICS"
+                android:textColor="#004A99"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:layout_marginBottom="10dp" />
+
+            <!-- STATS CARD -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card_white"
+                android:padding="18dp">
+
+                <!-- Accepted Jobs -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@drawable/ic_inbox"
+                        android:contentDescription="@null"
+                        app:tint="#004A99" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Accepted Jobs"
+                        android:textColor="#374151"
+                        android:textSize="14sp"
+                        android:layout_marginStart="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvAcceptedJobs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textColor="#111827"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#F1F5F9"
+                    android:layout_marginTop="14dp"
+                    android:layout_marginBottom="14dp" />
+
+                <!-- Completed Jobs -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@drawable/ic_check_circle"
+                        android:contentDescription="@null"
+                        app:tint="#16A34A" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Completed Jobs"
+                        android:textColor="#374151"
+                        android:textSize="14sp"
+                        android:layout_marginStart="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvCompletedJobs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textColor="#111827"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- REVIEWS -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="REVIEWS"
+                android:textColor="#004A99"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:layout_marginTop="26dp"
+                android:layout_marginBottom="12dp" />
+
+            <LinearLayout
+                android:id="@+id/reviewContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#E2E8F0"
+                android:layout_marginTop="28dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLogout"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="18dp"
+                android:text="Logout"
+                android:textColor="#E53935"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                app:backgroundTint="@android:color/transparent"
+                app:cornerRadius="12dp"
+                app:strokeColor="#E53935"
+                app:strokeWidth="1.5dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

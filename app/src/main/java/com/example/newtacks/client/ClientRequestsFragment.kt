@@ -5,6 +5,8 @@ import android.view.*
 import android.view.animation.AlphaAnimation
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.example.newtacks.R
 import com.example.newtacks.models.Job
@@ -27,8 +29,9 @@ class ClientRequestsFragment : Fragment() {
     private lateinit var progressBar: ProgressBar
     private lateinit var layoutContent: LinearLayout
     private lateinit var layoutEmptyState: LinearLayout
-
     private lateinit var layoutProgressLabels: LinearLayout
+    private lateinit var layoutBottomButtons: LinearLayout
+    private lateinit var layoutHeader: LinearLayout
 
     private var currentJobId: String? = null
     private var lastCancelTime: Long = 0
@@ -40,15 +43,34 @@ class ClientRequestsFragment : Fragment() {
     ): View {
         val view = inflater.inflate(R.layout.fragment_client_requests, container, false)
 
-        tvTitle          = view.findViewById(R.id.tvRequestTitle)
-        tvDetails        = view.findViewById(R.id.tvRequestDetails)
-        btnConfirm       = view.findViewById(R.id.btnConfirm)
-        btnReject        = view.findViewById(R.id.btnReject)
-        progressText     = view.findViewById(R.id.tvProgress)
-        progressBar      = view.findViewById(R.id.progressBar)
-        layoutContent    = view.findViewById(R.id.layoutContent)
-        layoutEmptyState = view.findViewById(R.id.layoutEmptyState)
+        tvTitle              = view.findViewById(R.id.tvRequestTitle)
+        tvDetails            = view.findViewById(R.id.tvRequestDetails)
+        btnConfirm           = view.findViewById(R.id.btnConfirm)
+        btnReject            = view.findViewById(R.id.btnReject)
+        progressText         = view.findViewById(R.id.tvProgress)
+        progressBar          = view.findViewById(R.id.progressBar)
+        layoutContent        = view.findViewById(R.id.layoutContent)
+        layoutEmptyState     = view.findViewById(R.id.layoutEmptyState)
         layoutProgressLabels = view.findViewById(R.id.layoutProgressLabels)
+        layoutBottomButtons  = view.findViewById(R.id.layoutBottomButtons)
+        layoutHeader         = view.findViewById(R.id.layoutHeader)
+
+        // --------------------------------------------------
+        // ✅ WINDOW INSETS — push header down below status bar
+        // --------------------------------------------------
+        ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            // Add status bar height on top of existing paddingTop (36dp)
+            layoutHeader.setPadding(
+                layoutHeader.paddingLeft,
+                systemBars.top + resources.getDimensionPixelSize(R.dimen.header_padding_top),
+                layoutHeader.paddingRight,
+                layoutHeader.paddingBottom
+            )
+
+            insets
+        }
 
         listenForActiveJob()
         btnConfirm.setOnClickListener { confirmJob() }
@@ -82,22 +104,22 @@ class ClientRequestsFragment : Fragment() {
     // 🔥 UI STATE: ACTIVE JOB
     // --------------------------------------------------
     private fun showActiveJob(job: Job) {
-        // Show content, hide empty state
-        layoutContent.visibility    = View.VISIBLE
-        layoutEmptyState.visibility = View.GONE
-        progressText.visibility     = View.VISIBLE
-        progressBar.visibility      = View.VISIBLE
+        layoutContent.visibility        = View.VISIBLE
+        layoutEmptyState.visibility     = View.GONE
+        progressText.visibility         = View.VISIBLE
+        progressBar.visibility          = View.VISIBLE
         layoutProgressLabels.visibility = View.VISIBLE
+        layoutBottomButtons.visibility  =
+            if (job.status == "PENDING_VERIFICATION") View.VISIBLE else View.GONE
 
-        currentJobId  = job.jobId
-        tvTitle.text  = job.jobTitle
+        currentJobId   = job.jobId
+        tvTitle.text   = job.jobTitle
         tvDetails.text = """
             Service: ${job.serviceCategory}
             Worker: ${job.workerName ?: "Waiting for worker..."}
             Price: ₱${job.offeredAmount}
         """.trimIndent()
 
-        // ===== BADGE TEXT + STYLE =====
         when (job.status) {
             "AVAILABLE" -> {
                 progressText.text = "Waiting for worker..."
@@ -137,17 +159,16 @@ class ClientRequestsFragment : Fragment() {
     // 🔥 EMPTY STATE
     // --------------------------------------------------
     private fun showEmptyState() {
-        currentJobId = null
-
-        layoutContent.visibility    = View.GONE
-        layoutEmptyState.visibility = View.VISIBLE
-
-        progressText.visibility = View.GONE
-        progressBar.visibility  = View.GONE
-        tvTitle.text            = ""
-        btnConfirm.visibility   = View.GONE
-        btnReject.visibility    = View.GONE
+        currentJobId                    = null
+        layoutContent.visibility        = View.GONE
+        layoutEmptyState.visibility     = View.VISIBLE
+        layoutBottomButtons.visibility  = View.GONE
+        progressText.visibility         = View.GONE
+        progressBar.visibility          = View.GONE
         layoutProgressLabels.visibility = View.GONE
+        tvTitle.text                    = ""
+        btnConfirm.visibility           = View.GONE
+        btnReject.visibility            = View.GONE
     }
 
     // --------------------------------------------------
@@ -266,6 +287,7 @@ class ClientRequestsFragment : Fragment() {
                     reviewId = firestore.collection("reviews").document().id,
                     jobId    = job.jobId ?: "",
                     clientId = job.clientId,
+                    clientName = job.clientName,
                     workerId = job.workerId ?: "",
                     rating   = ratingBar.rating,
                     comment  = etComment.text.toString()

@@ -8,6 +8,7 @@
 
     <!-- ===== HEADER ===== -->
     <LinearLayout
+        android:id="@+id/layoutHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_header_rounded"
@@ -16,7 +17,6 @@
         android:paddingTop="36dp"
         android:paddingEnd="24dp"
         android:paddingBottom="28dp">
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -238,6 +238,7 @@
 
     <!-- ===== BOTTOM BUTTONS ===== -->
     <LinearLayout
+        android:id="@+id/layoutBottomButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#FFFFFF"

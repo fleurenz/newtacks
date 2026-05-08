@@ -6,8 +6,12 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import android.widget.LinearLayout
 import com.example.newtacks.ClientDashboardActivity
 import com.example.newtacks.CompanyDashboardActivity
 import com.example.newtacks.R
@@ -21,7 +25,25 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ✅ Same approach as all other screens
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContentView(R.layout.activity_login)
+
+        val topSection = findViewById<LinearLayout>(R.id.topSection)
+
+        // ✅ Only push the top blue section down — leave white card alone
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            topSection.setPadding(
+                topSection.paddingLeft,
+                systemBars.top,
+                topSection.paddingRight,
+                topSection.paddingBottom
+            )
+            insets
+        }
 
         val repo = AuthRepository(
             FirebaseAuth.getInstance(),
@@ -38,9 +60,9 @@ class LoginActivity : AppCompatActivity() {
             }
         )[LoginViewModel::class.java]
 
-        val email = findViewById<EditText>(R.id.etEmail)
+        val email    = findViewById<EditText>(R.id.etEmail)
         val password = findViewById<EditText>(R.id.etPassword)
-        val btn = findViewById<Button>(R.id.btnLogin)
+        val btn      = findViewById<Button>(R.id.btnLogin)
 
         btn.setOnClickListener {
             viewModel.login(
@@ -73,15 +95,14 @@ class LoginActivity : AppCompatActivity() {
 
     private fun routeUser(role: String) {
         val intent = when (role) {
-            "CLIENT" -> Intent(this, ClientDashboardActivity::class.java)
-            "WORKER" -> Intent(this, WorkerDashboardActivity::class.java)
+            "CLIENT"  -> Intent(this, ClientDashboardActivity::class.java)
+            "WORKER"  -> Intent(this, WorkerDashboardActivity::class.java)
             "COMPANY" -> Intent(this, CompanyDashboardActivity::class.java)
             else -> {
                 Toast.makeText(this, "Unknown role: $role", Toast.LENGTH_SHORT).show()
                 null
             }
         }
-
         intent?.let { startActivity(it) }
     }
 }
