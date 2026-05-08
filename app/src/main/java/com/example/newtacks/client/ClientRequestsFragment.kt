@@ -1,5 +1,6 @@
 package com.example.newtacks.client
 
+import android.app.Dialog
 import android.os.Bundle
 import android.view.*
 import android.view.animation.AlphaAnimation
@@ -327,14 +328,35 @@ class ClientRequestsFragment : Fragment() {
     // 🔥 CANCEL JOB
     // --------------------------------------------------
     private fun showCancelConfirmationDialog() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Cancel Job Request")
-            .setMessage("Are you sure you want to cancel this request? This action cannot be undone.")
-            .setPositiveButton("Yes, Cancel") { _, _ ->
-                cancelJob()
-            }
-            .setNegativeButton("No", null)
-            .show()
+        val dialog = Dialog(requireContext())
+        dialog.setContentView(R.layout.dialog_role_select)
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.88).toInt(),
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        val icon = dialog.findViewById<ImageView>(R.id.dialogIcon)
+        val title = dialog.findViewById<TextView>(R.id.dialogTitle)
+        val message = dialog.findViewById<TextView>(R.id.dialogMessage)
+        val btnPositive = dialog.findViewById<com.google.android.material.button.MaterialButton>(R.id.dialogBtnPositive)
+        val btnNegative = dialog.findViewById<com.google.android.material.button.MaterialButton>(R.id.dialogBtnNegative)
+
+        icon.setImageResource(R.drawable.ic_close)
+        title.text = "Cancel Job Request"
+        message.text = "Are you sure you want to cancel this request? This action cannot be undone."
+        btnPositive.text = "Yes, Cancel"
+        btnNegative.text = "No"
+
+        btnPositive.setOnClickListener {
+            dialog.dismiss()
+            cancelJob()
+        }
+        btnNegative.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun cancelJob() {
@@ -451,9 +473,9 @@ class ClientRequestsFragment : Fragment() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_review, null)
         val ratingBar  = dialogView.findViewById<RatingBar>(R.id.ratingBar)
         val etComment  = dialogView.findViewById<EditText>(R.id.etComment)
+        val cbAnonymous = dialogView.findViewById<CheckBox>(R.id.cbAnonymous)
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Rate Worker")
+        AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
             .setView(dialogView)
             .setPositiveButton("Submit") { _, _ ->
                 val review = Review(
@@ -463,7 +485,8 @@ class ClientRequestsFragment : Fragment() {
                     clientName = job.clientName,
                     workerId = job.workerId ?: "",
                     rating   = ratingBar.rating,
-                    comment  = etComment.text.toString()
+                    comment  = etComment.text.toString(),
+                    isAnonymous = cbAnonymous.isChecked
                 )
                 saveReview(review)
             }

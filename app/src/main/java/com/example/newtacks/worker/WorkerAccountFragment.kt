@@ -15,6 +15,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.example.newtacks.R
 import com.example.newtacks.authentication.OnboardingActivity
+import com.example.newtacks.models.Review
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -27,8 +28,18 @@ class WorkerAccountFragment : Fragment() {
     private lateinit var tvAcceptedJobs: TextView
     private lateinit var tvCompletedJobs: TextView
     private lateinit var reviewContainer: LinearLayout
+    private lateinit var tvSeeAllReviews: TextView
+    private lateinit var filterAll: TextView
+    private lateinit var filter5: TextView
+    private lateinit var filter4: TextView
+    private lateinit var filter3: TextView
+    private lateinit var filter2: TextView
+    private lateinit var filter1: TextView
     private lateinit var btnLogout: Button
     private lateinit var layoutHeader: LinearLayout
+
+    private var isShowingAllReviews = false
+    private var currentRatingFilter: Int? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,6 +53,13 @@ class WorkerAccountFragment : Fragment() {
         tvAcceptedJobs  = view.findViewById(R.id.tvAcceptedJobs)
         tvCompletedJobs = view.findViewById(R.id.tvCompletedJobs)
         reviewContainer = view.findViewById(R.id.reviewContainer)
+        tvSeeAllReviews = view.findViewById(R.id.tvSeeAllReviews)
+        filterAll       = view.findViewById(R.id.filterAll)
+        filter5         = view.findViewById(R.id.filter5)
+        filter4         = view.findViewById(R.id.filter4)
+        filter3         = view.findViewById(R.id.filter3)
+        filter2         = view.findViewById(R.id.filter2)
+        filter1         = view.findViewById(R.id.filter1)
         btnLogout       = view.findViewById(R.id.btnLogout)
         layoutHeader    = view.findViewById(R.id.layoutHeader)
 
@@ -61,8 +79,44 @@ class WorkerAccountFragment : Fragment() {
         loadStats()
         loadReviews()
         setupLogout()
+        setupSeeAll()
+        setupFilters()
 
         return view
+    }
+
+    private fun setupFilters() {
+        val filters = listOf(filterAll, filter5, filter4, filter3, filter2, filter1)
+        val ratings = listOf(null, 5, 4, 3, 2, 1)
+
+        filters.forEachIndexed { index, textView ->
+            textView.setOnClickListener {
+                currentRatingFilter = ratings[index]
+                isShowingAllReviews = false
+                tvSeeAllReviews.text = "See all"
+
+                // Update UI selection
+                filters.forEach { 
+                    it.setBackgroundResource(R.drawable.bg_badge_white)
+                    it.setTextColor(android.graphics.Color.parseColor("#64748B"))
+                    it.setTypeface(null, android.graphics.Typeface.NORMAL)
+                }
+
+                textView.setBackgroundResource(R.drawable.bg_badge_blue)
+                textView.setTextColor(android.graphics.Color.parseColor("#FFFFFF"))
+                textView.setTypeface(null, android.graphics.Typeface.BOLD)
+
+                loadReviews()
+            }
+        }
+    }
+
+    private fun setupSeeAll() {
+        tvSeeAllReviews.setOnClickListener {
+            isShowingAllReviews = !isShowingAllReviews
+            tvSeeAllReviews.text = if (isShowingAllReviews) "Show less" else "See all"
+            loadReviews()
+        }
     }
 
     // ✅ Fires every time this fragment is shown via show() in add/hide/show pattern
@@ -118,23 +172,41 @@ class WorkerAccountFragment : Fragment() {
     @SuppressLint("MissingInflatedId")
     private fun loadReviews() {
         val uid = auth.currentUser?.uid ?: return
-        firestore.collection("reviews")
+        
+        var query = firestore.collection("reviews")
             .whereEqualTo("workerId", uid)
-            .get()
-            .addOnSuccessListener { snapshot ->
+        
+        currentRatingFilter?.let {
+            query = query.whereEqualTo("rating", it.toDouble())
+        }
+
+        query.get().addOnSuccessListener { snapshot ->
                 reviewContainer.removeAllViews()
                 if (snapshot.isEmpty) {
                     val empty = TextView(requireContext())
-                    empty.text      = "No reviews yet."
+                    empty.text      = if (currentRatingFilter == null) "No reviews yet." else "No $currentRatingFilter star reviews yet."
                     empty.textSize  = 13f
                     empty.setTextColor(android.graphics.Color.parseColor("#94A3B8"))
                     reviewContainer.addView(empty)
+                    tvSeeAllReviews.visibility = View.GONE
                     return@addOnSuccessListener
                 }
-                for (doc in snapshot.documents) {
-                    val clientName = doc.getString("clientName") ?: "Anonymous"
-                    val comment    = doc.getString("comment") ?: ""
-                    val rating     = doc.getDouble("rating") ?: 0.0
+
+                val allReviews = snapshot.documents
+                val displayReviews = if (isShowingAllReviews) allReviews else allReviews.take(5)
+
+                if (allReviews.size > 5) {
+                    tvSeeAllReviews.visibility = View.VISIBLE
+                } else {
+                    tvSeeAllReviews.visibility = View.GONE
+                }
+
+                for (doc in displayReviews) {
+                    val review = doc.toObject(Review::class.java) ?: continue
+                    val isAnonymous = review.isAnonymous
+                    val clientName = if (isAnonymous) "Anonymous User" else review.clientName
+                    val comment    = review.comment
+                    val rating     = review.rating
                     val card = layoutInflater.inflate(
                         R.layout.item_review_card,
                         reviewContainer,
