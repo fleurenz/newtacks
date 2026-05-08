@@ -279,41 +279,30 @@ class CreateJobActivity : AppCompatActivity() {
 
                 // CLIENT ALREADY HAS ACTIVE JOB
                 if (!snapshots.isEmpty) {
-
                     Toast.makeText(
                         this,
                         "You already have an active request",
                         Toast.LENGTH_LONG
                     ).show()
-
                     return@addOnSuccessListener
                 }
 
                 // ---------------- CREATE NEW JOB ----------------
-
                 btnSubmit.isEnabled = false
-
                 val jobId = firestore.collection("jobs").document().id
 
                 val job = Job(
-
                     jobId = jobId,
-
                     clientId = currentUser.uid,
                     clientName = clientName,
                     clientAddress = clientAddress,
-
                     jobTitle = jobTitle,
                     serviceCategory = serviceCategory,
-
                     scheduledDate = selectedDate,
                     scheduledTime = selectedTime,
-
                     estimatedDurationHours = estimatedDuration,
                     offeredAmount = offeredAmount,
-
                     description = description,
-
                     status = "AVAILABLE"
                 )
 
@@ -321,62 +310,22 @@ class CreateJobActivity : AppCompatActivity() {
                     .document(jobId)
                     .set(job)
                     .addOnSuccessListener {
+                        Toast.makeText(this, "Job Submitted Successfully", Toast.LENGTH_SHORT).show()
 
-                        Toast.makeText(
-                            this,
-                            "Job Submitted Successfully",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        val intent = Intent(
-                            this,
-                            ClientDashboardActivity::class.java
-                        )
-
-                        intent.putExtra(
-                            ClientDashboardActivity.OPEN_FRAGMENT,
-                            "REQUESTS"
-                        )
-
-                        intent.flags =
-                            Intent.FLAG_ACTIVITY_NEW_TASK or
-                                    Intent.FLAG_ACTIVITY_CLEAR_TASK
-
+                        // Navigate to Dashboard and open the Requests fragment
+                        val intent = Intent(this, ClientDashboardActivity::class.java)
+                        intent.putExtra(ClientDashboardActivity.OPEN_FRAGMENT, "REQUESTS")
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         startActivity(intent)
+                        finish()
                     }
                     .addOnFailureListener {
-
                         btnSubmit.isEnabled = true
-
-                        Toast.makeText(
-                            this,
-                            "Failed to submit job",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(this, "Failed to submit job", Toast.LENGTH_SHORT).show()
                     }
             }
-
-            .addOnSuccessListener {
-
-                Toast.makeText(this, "Job Submitted Successfully", Toast.LENGTH_SHORT).show()
-
-                val intent = Intent(this, ClientDashboardActivity::class.java)
-
-                intent.putExtra(
-                    ClientDashboardActivity.OPEN_FRAGMENT,
-                    "REQUESTS"
-                )
-
-                intent.flags =
-                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-
-                startActivity(intent)
-            }
             .addOnFailureListener {
-
-                btnSubmit.isEnabled = true
-
-                Toast.makeText(this, "Failed to submit job", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error checking active jobs", Toast.LENGTH_SHORT).show()
             }
     }
 }

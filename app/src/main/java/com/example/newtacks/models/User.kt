@@ -8,6 +8,9 @@ data class User(
     val phone: String = "",
     val address: String = "",
 
+    // 🖼 PROFILE IMAGE (ALL USERS)
+    val profileImage: String = "",
+
     // 🏢 COMPANY ONLY
     val companyName: String? = null,
     val hrName: String? = null,
@@ -15,6 +18,8 @@ data class User(
     // 🔧 WORKER ONLY
     val serviceCategories: List<String>? = null,
     val serviceExperience: Int? = null,
+
+    // ⭐ WORKER RATING SYSTEM
     val rating: Double = 0.0,
     val totalRatings: Int = 0
 )

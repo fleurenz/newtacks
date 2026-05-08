@@ -14,6 +14,7 @@ import com.example.newtacks.models.Receipt
 import com.example.newtacks.models.Review
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
+import java.util.Locale
 
 class ClientRequestsFragment : Fragment() {
 
@@ -33,6 +34,10 @@ class ClientRequestsFragment : Fragment() {
     private lateinit var layoutProgressLabels: LinearLayout
     private lateinit var layoutBottomButtons: LinearLayout
     private lateinit var layoutHeader: LinearLayout
+    private lateinit var cardWorkerInfo: View
+    private lateinit var tvWorkerDetailName: TextView
+    private lateinit var tvWorkerDetailPhone: TextView
+    private lateinit var tvWorkerDetailRating: TextView
 
     private var currentJobId: String? = null
     private var lastCancelTime: Long = 0
@@ -56,6 +61,11 @@ class ClientRequestsFragment : Fragment() {
         layoutProgressLabels = view.findViewById(R.id.layoutProgressLabels)
         layoutBottomButtons  = view.findViewById(R.id.layoutBottomButtons)
         layoutHeader         = view.findViewById(R.id.layoutHeader)
+
+        cardWorkerInfo       = view.findViewById(R.id.cardWorkerInfo)
+        tvWorkerDetailName   = view.findViewById(R.id.tvWorkerDetailName)
+        tvWorkerDetailPhone  = view.findViewById(R.id.tvWorkerDetailPhone)
+        tvWorkerDetailRating = view.findViewById(R.id.tvWorkerDetailRating)
 
         // --------------------------------------------------
         // ✅ WINDOW INSETS — push header down below status bar
@@ -164,6 +174,27 @@ class ClientRequestsFragment : Fragment() {
             "PENDING_VERIFICATION" -> 100
             else                   -> 0
         }
+
+        if (job.workerId != null) {
+            fetchWorkerDetails(job.workerId)
+        } else {
+            cardWorkerInfo.visibility = View.GONE
+        }
+    }
+
+    private fun fetchWorkerDetails(workerId: String) {
+        firestore.collection("users").document(workerId).get()
+            .addOnSuccessListener { doc ->
+                val name = doc.getString("name") ?: "Worker"
+                val phone = doc.getString("phone") ?: "N/A"
+                val rating = doc.getDouble("ratingAverage") ?: 0.0
+                val count = doc.getLong("ratingCount") ?: 0
+
+                tvWorkerDetailName.text = name
+                tvWorkerDetailPhone.text = "Phone: $phone"
+                tvWorkerDetailRating.text = String.format(Locale.getDefault(), "%.1f (%d reviews)", rating, count)
+                cardWorkerInfo.visibility = View.VISIBLE
+            }
     }
 
     // --------------------------------------------------
@@ -174,6 +205,7 @@ class ClientRequestsFragment : Fragment() {
         layoutContent.visibility        = View.GONE
         layoutEmptyState.visibility     = View.VISIBLE
         layoutBottomButtons.visibility  = View.GONE
+        cardWorkerInfo.visibility       = View.GONE
         progressText.visibility         = View.GONE
         progressBar.visibility          = View.GONE
         layoutProgressLabels.visibility = View.GONE
