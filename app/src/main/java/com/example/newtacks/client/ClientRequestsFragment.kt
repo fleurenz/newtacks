@@ -24,6 +24,7 @@ class ClientRequestsFragment : Fragment() {
     private lateinit var tvTitle: TextView
     private lateinit var tvDetails: TextView
     private lateinit var btnConfirm: Button
+    private lateinit var btnCancelJob: Button
     private lateinit var btnReject: Button
     private lateinit var progressText: TextView
     private lateinit var progressBar: ProgressBar
@@ -46,6 +47,7 @@ class ClientRequestsFragment : Fragment() {
         tvTitle              = view.findViewById(R.id.tvRequestTitle)
         tvDetails            = view.findViewById(R.id.tvRequestDetails)
         btnConfirm           = view.findViewById(R.id.btnConfirm)
+        btnCancelJob          = view.findViewById(R.id.btnCancelJob)
         btnReject            = view.findViewById(R.id.btnReject)
         progressText         = view.findViewById(R.id.tvProgress)
         progressBar          = view.findViewById(R.id.progressBar)
@@ -74,6 +76,7 @@ class ClientRequestsFragment : Fragment() {
 
         listenForActiveJob()
         btnConfirm.setOnClickListener { confirmJob() }
+        btnCancelJob.setOnClickListener { showCancelConfirmationDialog() }
         btnReject.setOnClickListener { rejectJob() }
 
         return view
@@ -110,7 +113,7 @@ class ClientRequestsFragment : Fragment() {
         progressBar.visibility          = View.VISIBLE
         layoutProgressLabels.visibility = View.VISIBLE
         layoutBottomButtons.visibility  =
-            if (job.status == "PENDING_VERIFICATION") View.VISIBLE else View.GONE
+            if (job.status == "PENDING_VERIFICATION" || job.status == "AVAILABLE") View.VISIBLE else View.GONE
 
         currentJobId   = job.jobId
         tvTitle.text   = job.jobTitle
@@ -125,21 +128,33 @@ class ClientRequestsFragment : Fragment() {
                 progressText.text = "Waiting for worker..."
                 progressText.setTextColor(android.graphics.Color.parseColor("#FFFFFF"))
                 progressText.setBackgroundResource(R.drawable.bg_badge_blue)
+                btnCancelJob.visibility = View.VISIBLE
+                btnConfirm.visibility = View.GONE
+                btnReject.visibility = View.GONE
             }
             "IN_PROGRESS" -> {
                 progressText.text = "Worker is working"
                 progressText.setTextColor(android.graphics.Color.parseColor("#D97706"))
                 progressText.setBackgroundResource(R.drawable.bg_badge_yellow)
+                btnCancelJob.visibility = View.GONE
+                btnConfirm.visibility = View.GONE
+                btnReject.visibility = View.GONE
             }
             "PENDING_VERIFICATION" -> {
                 progressText.text = "Ready for confirmation"
                 progressText.setTextColor(android.graphics.Color.parseColor("#16A34A"))
                 progressText.setBackgroundResource(R.drawable.bg_badge_green)
+                btnCancelJob.visibility = View.GONE
+                btnConfirm.visibility = View.VISIBLE
+                btnReject.visibility = View.VISIBLE
             }
             else -> {
                 progressText.text = "Active"
                 progressText.setTextColor(android.graphics.Color.parseColor("#FFFFFF"))
                 progressText.setBackgroundResource(R.drawable.bg_badge_blue)
+                btnCancelJob.visibility = View.GONE
+                btnConfirm.visibility = View.GONE
+                btnReject.visibility = View.GONE
             }
         }
 
@@ -149,10 +164,6 @@ class ClientRequestsFragment : Fragment() {
             "PENDING_VERIFICATION" -> 100
             else                   -> 0
         }
-
-        val isPending = job.status == "PENDING_VERIFICATION"
-        btnConfirm.visibility = if (isPending) View.VISIBLE else View.GONE
-        btnReject.visibility  = if (isPending) View.VISIBLE else View.GONE
     }
 
     // --------------------------------------------------
@@ -168,6 +179,7 @@ class ClientRequestsFragment : Fragment() {
         layoutProgressLabels.visibility = View.GONE
         tvTitle.text                    = ""
         btnConfirm.visibility           = View.GONE
+        btnCancelJob.visibility         = View.GONE
         btnReject.visibility            = View.GONE
     }
 
@@ -178,6 +190,34 @@ class ClientRequestsFragment : Fragment() {
         val anim = AlphaAnimation(0.4f, 1.0f)
         anim.duration = 300
         view?.startAnimation(anim)
+    }
+
+    // --------------------------------------------------
+    // 🔥 CANCEL JOB
+    // --------------------------------------------------
+    private fun showCancelConfirmationDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Cancel Job Request")
+            .setMessage("Are you sure you want to cancel this request? This action cannot be undone.")
+            .setPositiveButton("Yes, Cancel") { _, _ ->
+                cancelJob()
+            }
+            .setNegativeButton("No", null)
+            .show()
+    }
+
+    private fun cancelJob() {
+        val jobId = currentJobId ?: return
+        firestore.collection("jobs")
+            .document(jobId)
+            .delete()
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Job request cancelled and deleted", Toast.LENGTH_SHORT).show()
+                showEmptyState()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     // --------------------------------------------------
@@ -227,7 +267,9 @@ class ClientRequestsFragment : Fragment() {
             workerName      = job.workerName ?: "",
             jobTitle        = job.jobTitle,
             serviceCategory = job.serviceCategory,
-            amount          = job.offeredAmount
+            amount          = job.offeredAmount,
+            createdAt       = job.createdAt,
+            completedAt     = job.completedAt ?: System.currentTimeMillis()
         )
         firestore.collection("receipts")
             .document(receiptId)
